@@ -1,0 +1,461 @@
+Validation Nedir?
+
+- Form'un üzerindeki veri alanlarının kullanıcılar tarafından beklenen kurallarda girilip girilmediğini kontrol etmemizi sağlayan doğrulayıcılardır.
+
+- Bir formun validation'ları bütünsel olarak doğrulanmadığı sürece formun valid özelliği false değeri döndürecek doğrulandığında ise true değerini verecektir.
+
+Validation'lar yapısal olarak sync validators ve async validators olmak üzere ikiye ayrılır.
+
+Sync Validators'ta, doğrulamalar çalıştırılır ve hemen ardından geriye sonuç dönerler. Varsa geçersizlik hata listesi olarak döndürür yahut bir haa yoksa null döndürürler.
+
+Async Validators'ta ise doğrulamalar Promise veya Observable döndürürler ve subscribe olunabilir bir davranış sergilerler.
+
+---
+
+Built-in Validators
+
+- Angular'da ReactiveForms modülü içerisinde kullanıma hazır birkaç built-in validators gelmektedir.
+
+min, max, required, requiredTrue, email, minlength, maxlength.
+
+Örnek:
+
+Önce ilgili modülleri import etmeyi unutmayalım.
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { ReactiveFormsModule } from '@angular/forms';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    ReactiveFormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+app.component.ts'de ise tek bir Validation ya da birden fazla Validation ekleme işlemini yapabiliriz;
+
+import { Component } from '@angular/core';
+import { FormBuilder,FormGroup,Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Name"> <br>
+    <input type="text" formControlName="surname" placeholder="Surname"> <br>
+    <input type="text" formControlName="email" placeholder="Email"> <br>
+    <button>Submit</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder) {
+    this.frm = formBuilder.group({
+      name: ["", Validators.required],
+      surname: ["", [Validators.required, Validators.minLength(5)]],
+      email: [""]
+    })
+  }
+  onSubmit(){
+    console.log(this.frm.valid);
+    console.log(this.frm.value);
+  }
+}
+
+ng serve ile çalıştırıp forma validasyonlara uygun değerleri girmediğimiz sürece valid false dönecektir.
+
+---
+
+Doğrulanma ve Hata Mesajlarını Elde Etme
+
+- Form yapılanmalarının doğrulama süreçlerinde eğer hata varsa kullanıcılara kısa ve anlamlı bir şekilde bu hatalara dair mesajları vermemiz gerekmektedir.
+
+- Bunun için FormControl nesnelerinin error property'sinden istifa ederiz.
+
+- Her form ögesinin validasyon süreci neticesinde varsa hata kendisi ile ilişkilendirilmiş bir error nesnesi mevcut olacaktır.
+
+Bunu örneklendirmeden önce Component Class'ında FormCOntrol nesnelerine kolayca erişim gösterebilmemizi sağlayacak olan property'leri oluşturalım.
+
+Örnek:
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Name"> <br>
+    <div *ngIf="!name.valid && (name.dirty || name.touched)">
+      {{name.errors | json}}
+    </div>
+    <input type="text" formControlName="surname" placeholder="Surname"> <br>
+    <div *ngIf="!surname.valid && (surname.dirty || surname.touched)">
+      {{surname.errors | json}}
+    </div>
+    <input type="text" formControlName="email" placeholder="Email"> <br>
+    <div *ngIf="!email.valid && (email.dirty || email.touched)">
+      {{email.errors | json}}
+    </div>
+    <button>Submit</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder) {
+    this.frm = formBuilder.group({
+      name: ["", Validators.required],
+      surname: ["", [Validators.required, Validators.minLength(5)]],
+      email: ["", [Validators.required, Validators.email]]
+    })
+  }
+
+  //üç tane formControl'ü template'de bu kontrollere daha rahat erişebilmek için property olarak 
+  //tanımladık.
+  get name(){
+    return this.frm.get("name")
+  }
+
+  get surname(){
+    return this.frm.get("surname")
+  }
+
+  get email(){
+    return this.frm.get("email")
+  }
+
+  onSubmit(){
+    console.log(this.frm.valid);
+    console.log(this.frm.value);
+  }
+}
+
+görüldüğü üzere ilgili input'ların altına property'ler yardımı ile div'ler içerisinde hata mesajlarını yazdırıp kullanıcıyı bilgilendirdik.
+
+---
+
+Custom Validator Oluşturma ve Kullanma
+
+- Angular'da built-in olarak gelen validtor'lar dışında özelleştirilmiş validator'lar da oluşturabiliriz.
+
+- Bunun için ValidatorFn interface'inden istifade edebiliriz. Bu interface içerisindeki imza sayesinde bizlere validator oluşturma kurallarını direkt sunmaktadır.
+
+export declare interface ValidatorFn{
+	(control: AbstractControl): ValidationErrors | null;
+}
+
+Görüldüğü üzere bir validator tanımlayabilmek için geriye ValidationErrors nesneyi ya da null değer dönen ve parametre olarak AbstractControl türünden bir değer alan bir fonksiyon tanımlamamız yeterlidir.
+
+Örnek olarak bir kontrole girilen değerin ilk harfinin büyük harf olup olmadığını kontrol edelim.
+
+terminal'de ng g cl customValidators/customVal ile oluşturalım.
+
+custom-val.ts;
+
+import { AbstractControl, ValidationErrors } from "@angular/forms";
+
+export function capitalLetterValidator(control: AbstractControl): ValidationErrors | null
+{
+    const value = control.value;
+
+    const ascii: string[] = [];
+    for (let n = 65; n <= 90; n++) {
+        ascii.push(String.fromCharCode(n))
+        
+    if(ascii.indexOf(value[0]) == -1) {
+        return { capitalLetter: true }
+    }
+    return null;
+    }
+}
+
+'de hazırladıktan sonra kullanabilmek için import ettikten sonra;
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { capitalLetterValidator } from './customValidators/custom-val';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Name"> <br>
+    <div *ngIf="!name.valid && (name.dirty || name.touched)">
+      {{name.errors | json}}
+    </div>
+    <input type="text" formControlName="surname" placeholder="Surname"> <br>
+    <div *ngIf="!surname.valid && (surname.dirty || surname.touched)">
+      {{surname.errors | json}}
+    </div>
+    <input type="text" formControlName="email" placeholder="Email"> <br>
+    <div *ngIf="!email.valid && (email.dirty || email.touched)">
+      {{email.errors | json}}
+    </div>
+    <button>Submit</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder) {
+    this.frm = formBuilder.group({
+      name: ["", Validators.required],
+      surname: ["", [Validators.required, Validators.minLength(5), capitalLetterValidator]],
+      email: ["", [Validators.required, Validators.email]]
+    })
+  }
+...
+}
+
+Kullanmak istediğimiz kontrolde,
+      surname: ["", [Validators.required, Validators.minLength(5), capitalLetterValidator]],
+şeklinde yazmamız yeterli olacaktır.
+
+---
+
+Parametreli Custom Validator Oluşturma ve Kullanma
+
+- Parametreli custom validator oluşturmak için geriye ValidatorFn  interface'i türünden nesne dönen bir fonksiyon tasarlamamız gerekmektedir.
+
+- Normalde yukarıdaki gibi yaparsak hata alırız. Çünkü ValidatorFn imzasının dışına çıkmış oluruz.
+
+Örnek olarak oluşturduğumuz bu validator'ı parametrede verilen değerdeki hane kadar büyük harf kontrolü yapacak hale getirelim.
+
+app.component.ts'de ilgili import'ları yapıp;
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { capitalLetterValidator } from './customValidators/custom-val';
+import { capitalLetterValidatorWithParam } from './customValidators/custom-val-parameter';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Name"> <br>
+    <div *ngIf="!name.valid && (name.dirty || name.touched)">
+      {{name.errors | json}}
+    </div>
+    <input type="text" formControlName="surname" placeholder="Surname"> <br>
+    <div *ngIf="!surname.valid && (surname.dirty || surname.touched)">
+      {{surname.errors | json}}
+    </div>
+    <input type="text" formControlName="email" placeholder="Email"> <br>
+    <div *ngIf="!email.valid && (email.dirty || email.touched)">
+      {{email.errors | json}}
+    </div>
+    <button>Submit</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder) {
+    this.frm = formBuilder.group({
+      name: ["", [Validators.required, capitalLetterValidatorWithParam(5)]],
+      surname: ["", [Validators.required, Validators.minLength(5), capitalLetterValidator]],
+      email: ["", [Validators.required, Validators.email]]
+    })
+  }
+ ......
+ 
+şeklinde name kontrolünde ilk 5 harfin büyük olacağı şekilde bir validasyon yapabiliriz.
+
+---
+
+Async Validator
+
+- Şu ana kadar gördüğümüz tüm validator'lar, doğrulanmakta ve ardından sonuç dönmekteydi, yani sync'di.
+
+- Şimdi async validator'un farkını görelim. Bunun için AsyncValidatorFn interface'inden istifade edelim.
+
+export declare interface AsyncValidatorFn {
+	(control: AbstractControl): Promise<ValidationErrors | null Observable<ValidationErrors | null>;
+
+Görüldüğü üzere async validator tanımlayabilmek için geriye Promise yahut Observable dönen ve AbstractCtonrol türünden parametre alan bir fonksiyon tanımlanması gerekmektedir.
+
+- Genellikle bu validator yapısı, doğrulama için gerekli olan verilerin dış bir servisten alındığı uzun soluklu süreçler için kullanılmaktadır.
+
+Örnek: (RxJS'i gördükten sonra)
+
+---
+
+Karşılaştırma Validatörleri
+
+- Bazen iki farklı kontrolün değerlerini birbirleriyle kıyaslamak isteyebiliriz. Misal olarak başlangıç ve bitiş tarihlerini tutan kontroller arasında tutarsızlık duurmlarını kontrol etmek isteyebiliriz. Ya da girilen şifreyi doğrulamak da isteyebiliriz.
+
+- Bu şekilde birden fazla kontrol arasında bir doğrulama gerçekleştireceksek eğer bu doğrulama mantığının bu alanların her biri için çalıştığından emin olmamız gerekir.
+
+- Şifre doğrulama örneğinden gidersek, biri şifreyi bir diğeri de doğrulayıcı değeri alan iki kontrolün kıyaslanabilmesi için tüm bu kontrollere erişebilen tekil bir validator yazmamız gerekecektir.
+
+- Bunun için oluşturacağımız validator2u FormControl'lere değil FormGroup'a eklememiz gerekmektedir ki kümülatif olarak grup altındaki tüm kontroller için işlevsellik gösterebilsin.
+
+Örnek:
+
+password-val.ts;
+
+import { AbstractControl, ValidationErrors, ValidatorFn } from "@angular/forms"
+
+export function matchPassword(): ValidatorFn {
+    return(control: AbstractControl): ValidationErrors | null => {
+        const password: string = control.get("password").value
+        const passwordConfirm: string = control.get("passwordConfirm").value
+
+        if(password != passwordConfirm) {
+            return { "noMatch": true}
+        }
+        return null
+    }
+}
+
+ve app.component.ts;
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { capitalLetterValidator } from './customValidators/custom-val';
+import { capitalLetterValidatorWithParam } from './customValidators/custom-val-parameter';
+import { matchPassword } from './customValidators/password-val';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()">
+    <input type="text" formControlName="name" placeholder="Name"> <br>
+    <div *ngIf="!name.valid && (name.dirty || name.touched)">
+      {{name.errors | json}}
+    </div>
+    <input type="text" formControlName="surname" placeholder="Surname"> <br>
+    <div *ngIf="!surname.valid && (surname.dirty || surname.touched)">
+      {{surname.errors | json}}
+    </div>
+    <input type="password" formControlName="password" placeholder="Password"> <br>
+    <div *ngIf="!password.valid && (password.dirty || password.touched)">
+      {{password.errors | json}}
+    </div>
+    <input type="password" formControlName="passwordConfirm" placeholder="Confirm Password"> <br>
+    <div *ngIf="!passwordConfirm.valid && (passwordConfirm.dirty || passwordConfirm.touched)">
+      {{passwordConfirm.errors | json}}
+    </div>
+    <div *ngIf="frm.hasError('noMatch')">
+      Password's must match!
+    </div>
+    <input type="text" formControlName="email" placeholder="Email"> <br>
+    <div *ngIf="!email.valid && (email.dirty || email.touched)">
+      {{email.errors | json}}
+    </div>
+    <button>Submit</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder) {
+    this.frm = formBuilder.group({
+      name: ["", [Validators.required, capitalLetterValidatorWithParam(5)]],
+      surname: ["", [Validators.required, Validators.minLength(5), capitalLetterValidator]],
+      email: ["", [Validators.required, Validators.email]],
+      password: ["", Validators.required],
+      passwordConfirm: ["", Validators.required]
+    }, { validators: [matchPassword()] })
+  }
+
+  //üç tane formControl'ü template'de bu kontrollere daha rahat erişebilmek için property olarak 
+  //tanımladık.
+  get name(){
+    return this.frm.get("name")
+  }
+
+  get surname(){
+    return this.frm.get("surname")
+  }
+
+  get email(){
+    return this.frm.get("email")
+  }
+
+  get password(){
+    return this.frm.get("password")
+  }
+
+  get passwordConfirm(){
+    return this.frm.get("passwordConfirm")
+  }
+
+  onSubmit(){
+    console.log(this.frm.valid);
+    console.log(this.frm.value);    
+  }
+}
+
+
+ile password ve password confirm validasyonunu yapabiliriz.
+
+Eğer ki burada karşılaştırma validator'ünü parametrik hale getirmek istiyorsanız;
+
+export function matchControl(firstControl: string, secondControl: string): ValidatorFn {
+    return(control: AbstractControl): ValidationErrors | null => {
+        const control1: string = control.get(firstControl).value
+        const control2: string = control.get(secondControl).value
+
+        if(control1 != control2) {
+            return { "noMatch": true}
+        }
+        return null
+    }
+}
+
+app.component'da kullanmak için ise;
+...
+}, { validators: [matchControl("password", "passwordConfirm)] })
+...
+
+şekline düzenleyebiliriz.
+
+---
+
+Dinamik Olarak Validator Eklemek veya Silmek
+
+- Bazen uygulamanın ayakta olduğu süreçlerde duruma göre form'a yeni validasyonel kuralları eklemek isteyebiliriz. Dolayısıyla bunu sağlayabilmek için dinamik bir çalışma sergilememiz gerekebilmektedir.
+
+- Bunun için setValidators ve setAsyncValidators metotları kullanılabilir.
+
+- setValidators metodu validator'ları dinamik olarak senkronize bir davranış sergiler. Bu metot ile eklenen validator ile ilgili kontrole dair önceden eklenmiş olan sync ve async tüm validatorlar kaldırılmış olacaktır.
+
+this.frm.get("password").setValidators(Validators.maxLength(3));
+
+setValidators verilen validator'ı mevcut tüm validator'ların üzerine yazar. Bundan dolayı forma, ilgili fonksiyonla dinamik bir şekilde validator eklerken, olması istenen tüm validator'ların eklenmesine özen gösterilmelidir.
+
+Bunun dışında bir kontrolden var olan tüm validator'ları kaldırmak istediğimiz taktirde clearValidators fonksiyonunu kullanabiliriz.
+
+this.frm.get("password").clearValidators();
+
+---
+
+Validator Durumlarını Güncelleme
+
+- Validator'ların dinamik bir şekilde eklenmesi veya kaldırılması, formun ve denetimin geçerlilik durumunu hemen değiştirmeyecektir. Validator'lar yalnızca alanın değeri değiştirdiğimiz de çalışırlar.
+
+- Dolayısıyla dinamik olarak validator'lara müdahele ettiğimizde updateValueAndValidity fonksiyonuyla yeni duruma göre validator'ların çalıştırılması için Angular mimarisini zorlayabiliriz.
+
+this.frm.get("password").updateValueAndValidity();
+ya da 
+this.frm.updateValueAndValidity();

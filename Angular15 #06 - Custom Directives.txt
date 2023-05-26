@@ -1,0 +1,276 @@
+Directive Oluşturma
+
+terminal üzerinden ng generate directive ahmet ya da ng g d ahmet
+uygulamanın app klasörü içerisinde ahmet isimli bir directive oluşturacaktır.
+ahmet.directive.ts ve ilgili spec dosyası.
+
+fakat bu karışıklığa sebep verebilir.
+
+Bu isteğe uygun klasör oluşturmak daha uygun olacaktır.
+
+ng g d directives/example ile directives klasörünün içerisinde example isimli bir directive oluşturacaktır.
+example.directive.ts ve ilgili spec dosyası.
+
+Oluşturduğumuz zaman app.module.ts'de gerekli declarations'ların eklendiğini de görürüz.
+Bir directive oluşturulduğu zaman ana modüle declare edilmelidir.
+
+spec dosyası olmadan oluşturmak için;
+ng g d directives/example2 --skip-tests yazabiliriz.
+
+Oluşturulan default example.directive.ts dosyası,
+
+import { Directive } from '@angular/core';
+
+//Bir directive'in sınıf adının sonunda Directive olması isimsel bir kültürdür. ExampleDirective gibi.
+//Fakat bir sınıfın gerçekten bir directive olabilmesi için @Directive decorator'u üzerinden işaretlenmesi gerekmektedir.
+@Directive({
+  selector: '[appExample]'
+  //Uygulama seviyesinde directive'i kullanmamızı sağlayan bir referanstır.
+  //Köşeli parantez ile yazılmış ise bu attribure refaransı olarak kullanılacak demektir.
+})
+export class ExampleDirective {
+
+  constructor() { }
+
+}
+
+app.component.ts de,
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div appExample>
+    merhaba
+  </div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    //...
+}
+
+işlemini yaptığımızda,
+
+<div appExample> yani burada div HTML nesnesini ilgili directive'in davranışına tabii tutmuş oluyoruz.
+    merhaba
+</div>
+
+eğer ki selector: '[appExample]' de köşeli parantez değilde,
+selector: '.appExample' kullanırsak bu directive class özelliğine bürünür.
+
+example.directive.ts de,
+
+import { Directive } from '@angular/core';
+
+@Directive({
+  selector: '.appExample'
+})
+export class ExampleDirective {
+
+  constructor() { }
+
+}
+
+app.component.ts de,
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div class=".appExample">
+    merhaba
+  </div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    //...
+}
+
+Yani sonuç olarak selector özelliği köşeli parantez içerisinde kullanılıyorsa bu attribute, yok eğer . ile kullanılıyorsa bu da class olarak ilgili
+directive'in kullanılacağı anlamına gelmektedir.
+
+---
+
+Directive ile İşaretlenmiş HTML Nesnesini Elde Etme
+
+import { Directive, ElementRef } from '@angular/core';
+
+@Directive({
+  selector: '[appExample]'
+})
+export class ExampleDirective {
+
+  //directive ile işaretlenmiş HTML nesnesi üzerinde bir davranış gerçekleştirmiş olduk.
+  constructor(private element: ElementRef) { //Nesneye erişmek için ElementRef türünde bir private element parametresi oluşturmalıyız.
+    element.nativeElement.style.backgroundColor = "red"
+   }
+}
+
+Örnek:
+
+example.directive.ts;
+
+//jQuery ile kullanım ileride detaylı. Şimdilik bir directive ile işaretleme sayesinde farklı davranışları HTML nesnesine uygulayabildiğimizi görelim.
+
+import { Directive, ElementRef } from '@angular/core';
+
+//jQuery'deki $'i kullanabilmek için,
+declare var $: any;
+
+@Directive({
+  selector: '[appExample]'
+})
+export class ExampleDirective {
+
+  constructor(private element: ElementRef) {
+    element.nativeElement.style.backgroundColor = "red";
+    $(element.nativeElement).fadeOut(2000).fadeIn();
+  }
+}
+
+app.component.ts;
+
+//burada, ilk div'de arkaplanı kırmızı olan HTML nesnesinin yukarıdaki işlemler neticesinde 2 saniye sonra sönüp yanacağını göreceğiz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div appExample>
+    merhaba
+  </div>
+  <div class=".appExample">
+    merhaba
+  </div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    //...
+}
+
+---
+
+Directive'e Parametre Tanımlama
+
+- Directive üzerinde parametre tanımlayabilmek için Input field tanımlamak yeterlidir.
+
+example.directive.ts;
+
+import { Directive, ElementRef, Input, OnInit } from '@angular/core';
+
+declare var $: any;
+
+@Directive({
+  selector: '[appExample]'
+})
+export class ExampleDirective implements OnInit{ //OnInit interface'ini implement etmemiz gerekli. (ileride detaylı)
+
+  constructor(private element: ElementRef) {
+   
+  }
+  ngOnInit(): void { //constructor'da yaptığımız işlemleri buraya taşıdığımızda
+    this.element.nativeElement.style.backgroundColor = this.color;
+    $(this.element.nativeElement).fadeOut(2000).fadeIn();
+  }
+
+  @Input() color: string;
+}
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div appExample color="blue"> //artık buradan rengi değiştirip input olan color'a gönderebiliriz.
+    merhaba
+  </div>
+  <div class=".appExample">
+    merhaba
+  </div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    //...
+}
+
+Not: OnInit inteface'inin sağladığı ngOnInit() fonksiyonu bir yapının ilk üretildiği anda tetiklenir. Constructor değildir. Constructor'dan sonra tetiklenir.
+Bu interface'i kullanabilmek için ngOnInit() fonksiyonunu implement etmemiz gereklidir.
+
+Constructor'da color'u belirleyemezdik. Çünkü her şeyden önce tetikleneceği için color'un rengine ne yazılırsa yazılsın Constructor'da color belirtsek dahi default renk geçerli olacaktı. Color ilk başta boş olacağı için div'in rengi ne ise o olacaktır. 
+
+Fakat ngOnInit() fonksiyonu constructor'dan sonra tetikleneceği için çoktan tüm yapılanmalar kendine geleceğinden ilgili işlemleri yapabiliriz.
+
+---
+
+HostListener: Oluşturduğumuz directive'in hangi event ile görevlendireleceğini belirlememizi sağlayan bir decorator'dur.
+
+import { Directive, ElementRef, HostListener, Input, OnInit } from '@angular/core';
+
+declare var $: any;
+
+@Directive({
+  selector: '[appExample]'
+})
+export class ExampleDirective implements OnInit{
+
+  constructor(private element: ElementRef) {
+   
+  }
+  ngOnInit(): void {
+    this.element.nativeElement.style.backgroundColor = this.color;
+    $(this.element.nativeElement).fadeOut(2000).fadeIn();
+  }
+
+  @Input() color: string;
+
+  @HostListener("click")
+  onClick() {
+    alert("HTML nesnesi click edildi.")
+  }
+}
+
+İlgili div'e tıkladığımız an ekrana alert yazısı çıkacaktır.
+
+---
+
+HostBinding: Directive'in işaretlediği DOM nesnesinin bir özelliğine bind olarak işlemler gerçekleştirmemize yarar.
+
+import { Directive, ElementRef, HostBinding, HostListener, Input, OnInit } from '@angular/core';
+
+declare var $: any;
+
+@Directive({
+  selector: '[appExample]'
+})
+export class ExampleDirective implements OnInit {
+
+  constructor(private element: ElementRef) {
+
+  }
+  ngOnInit(): void {
+    this.element.nativeElement.style.backgroundColor = this.color;
+    $(this.element.nativeElement).fadeOut(2000).fadeIn();
+  }
+
+  @Input() color: string;
+
+  @HostListener("click")
+  onClick() {
+    alert("HTML nesnesi click edildi.")
+  }
+
+  @HostBinding("style.color")
+  writingColor: string = "red";
+}
+
+writingColor'da hangi değeri verirsek, bu directive ile işaretlenmiş olan HTML nesnesinin style'ının color'ına o değer bind edilmiş olacaktır.
+Buradaki color yazı rengini etkileyeektir. Yukarıdaki backgroundColor'u değiştiren Input olan color field'ı ile farklıdır.

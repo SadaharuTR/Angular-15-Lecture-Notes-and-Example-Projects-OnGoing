@@ -1,0 +1,604 @@
+Angular Forms Nedir?
+
+- Kullanıcılardan veri alabilmek yahut kullanıcılarla etkileşme girebilmek için kullanılan yapılardır.
+- Template-Driven Forms ve Model-Driven/Reactive forms olmak üzere iki yaklaşımla kullanılabilmektedir.
+
+Template-Driven Forms
+
+- Angular yapısını oluşturmanın kolay yoludur.
+- Form elemanlarının her birini ngModel direktifi ile işaretleyerek çalışma sergilemektedir.
+- Formun tasarımını ve yapılandırmasını tamamen template üzerinden gerçekleştirir.
+
+Model-Driven/Reactive Forms
+
+- Template-Driven Formlara nazaran daha karmaşık form işlemleri için uygundur.
+- Bu yaklaşımda formun temel mantığı component üzerinde bir nesne/ HTML'deki ilgili form etklentilerine bind edilir.
+- Model-Driven Formlar, Reactive Forms olarak da bilinmektedir. Çünkü, form elemanları ve bu form elemanlarındaki verilerin değişiklik durumlar ilgili nesne/
+tarafından reaktif bir şekilde(dinamik) takip edilmektedir.
+
+---
+
+Angular Form Konseptleri
+
+- Bir Angular Form yapısında, Template-Driven ya da Model-Driven Form yaklaşımlarından hangisinin kullanıldığından bağımsız dört ana yapıtaşı mevcuttur.
+
+FormGroup: Bir form içerisinde bulunan bir grup kontrolü temsil eder. Bir başka deyişle formun kendisini temsil eder. İçerisinde FormControl nesneleri barındırır.
+
+FormArray: Form içerisinde dinamik olarak oluşturulan kontrolleri temsill eden dizisel nesnedir.
+
+FormControl: Form içerisinde bulunan, kullancıdan veri almamızı sağlayacak olan tek bir kontrolü temsil eder.
+
+FormBuilder: FormGroup, FormControl ve FormArray nesnelerini oluşturmamızı kolaşlaştıracak olan bir servistir. İçerisindeki hazır fonksiyonlar sayesinde formu hızlıca üretebilmemizi ve konfigüre etmemizi sağlar.
+
+Not: FormGroup ile FormArray arasındaki en temel fark, temsil ettikleri veri yapılarıdır. FormGroup sabit bir form bölümünü temsil ederken, FormArray dinamik olarak yüklenen form elemanlarını temsil eder. Örneğin, bir form'da isim, soyisim, email vs. gibi benzersiz kontroller FormGroup nesnesinde temsil edilirken;
+tel1, tel2 vs. gibi benzer alanlar FormArray nesnesiyle temsil edilir.
+
+---
+
+İki Forms Yaklaşımı Arasındaki Farklar
+
+- Veri Modeli: Model-Driven Forms yaklaşımı verileri bir veri modeli ile yönetirken, Template-Driven Forms yaklaşımı ise verileri HTML şablonlarına bağlı olarak yönetmektedir.
+
+- Doğrulama: Model-Driven Forms yaklaşımı bir formdaki tüm kontrolleri doğrulama kurallarına tabi tutarken, Template-Driven Forms yklşımı ise ngModel direktifi ile işaretlenmiş olan kontrollerde doğrulama gerçekleştirir.
+
+- Kontrolün Bağımsızlığı: Bir formdaki form kontrollerinin, formun geri kalan kısmından ayrı ve bağımsız bir şekilde kullanılabilmesini ifade eden özelliktir.
+Misal olarak, bir form kontrolünü birden fazla ve farklı form içerisinde kullanmak istediğimizde bu kontrolün diğerlerinden bağımsız olarak tanımlanması gerekmektedir. Model-Driven Forms yaklaşımı kontrol bağımsızlığını sağlarken Template-Driven Forms yaklaşımı ise kontrol bağımsızlığını sağlamaz.
+
+- Test Edilebilirlik: Model-Driven Forms yaklaşımı, test edilebilirlik açısından daha iyi bir strateji sunmakta ve form kontrolü ile doğrulama süreçlerini birbirlerinden ayrı tutmaktadır. Böylece farklı test senaryolarını rahatlıkla ve esnek bir şekilde uygulanabilmektedir.
+
+- Karmaşıklık: Model-Driven Forms, daha karmaşık formlar için; Template-Driven Forms daha basit ve sade formlar için tercih edilebilir.
+
+---
+
+Template Driven Forms Yaklaşımı Nedir?
+
+- Form'daki bütün davranışların ve validasyonların template üzerinde directive'ler ve attribute'lar kullanarak belirlendiği bir yaklaşımdır.
+
+- Template-Driven Forms yapılanmasında tüm işlemler template üzerinde gerçekleştirileceği için component class'ında çok az kodlama gerekmektedir.
+
+Template-Driven Forms yaklaşımında kullanılan temel directive'ler nelerdir?
+
+- ngForm: Formun kurulmasını sağlayan temel directive'dir.
+- ngModel: Form içerisinde kullanılacak kontrolleri işaretleyecek directive'dir. Ayrıca ngModel directive'i Two Way Data Binding mekanizmasını kullanarak işlem gerçekleştirir.
+
+Bu directive'ler sayesinde Template-Driven Forms ile geliştirilen formlar hızlı ve basit bir şekilde inşa edilebilir.
+
+Detaylar:
+
+- Bu yaklalımla form oluşturmak için öncelikle gerekli form directive'leri ve yapıları barındıran FormsModule isimli modülü uygulamada ilgili modüle import etmek gereklidir.
+
+imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule
+],
+  
+- Ardından hangi form'u Template-Driven olarak kullanacaksak onu ngForm directive'i ile işaretlememiz lazım.
+Bu directive ile form nesnesi otomatik olarak algılanıp, bağlanılmaktadır. Dolayısıyla ilgili directive'i ekstradan çağırmak yahut bağlanmak için herhangi bir işlem yapmamıza gerek yoktur.
+
+<form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+     <!-- frm referansına karşılık form bind edilmiştir. Bu sayede frm'ye karşılık yapılan bir referans atamasında ilgili formu temsil edip çalışmaları gerçekleştirebiliriz. -->
+</form>
+
+- Form içerisindeki kullanılacak kontrolleri ngModel directive'i ile işaretleyiniz.
+
+<form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+    <input type="text" name="name" placeholder="Name" ngModel> <br>
+    <input type="text" name="surname" placeholder="Surname" ngModel> <br>
+    <select name="job" ngModel>
+      <!-- ... -->
+    </select>
+</form>
+
+Not: ngForm directive'i form nesnesini kendine bağlayacağı gibi bir yandan da arka planda bir FormGroup nesnesi oluşturarak bunu temsil edecektir. Yani burada ngForm'a karşılık verdiğimiz #frm template referansı aslında bir FormGroup nesnesi olacaktır.
+
+- Son olarak form doldurulduğu taktirde kullanıcı tarafından component class'a verilerin gönderilebilmesi için ngSubmit event'inden istifade edebilirsiniz.
+
+(ngSubmit)="onSubmit(frm.value) ' eventini istediğimiz bir fonksiyona karşılık tanımlayabiliriz. Buradaki fonksiyonun component class'ında tanımlanması gerekmektedir. Burada onSubmit fonksiyonuna mevcut form'un value'sunu göndererek gerekli submit işlemini gerçekleştirebiliriz.
+
+export class AppComponent {
+  title = 'angular_Forms';
+  onSubmit(data: {name: string, surname: string, job: number, tels: []}) {
+    //gönderilen value'yu data parametresi ile alıyoruz. Ve işlemleri gerçekleştiriyoruz.
+	console.log(`{data.name} {data.surname} - {data.job} {data.name} - tels : {data.tels} `)
+  }
+}
+
+Form submit edildiği taktirde gelecek olan data'ları name="..." değerine karşılık elde ediyoruz.
+
+- İlgili event'e karşılık verilen fonksiyondan form'daki verileri yukarıdaki alabiliriz.
+
+Örnek:
+
+app.component.ts
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+    <input type="text" name="name" placeholder="Name" ngModel> <br>
+    <input type="text" name="surname" placeholder="Surname" ngModel> <br>
+    <input type="email" name="email" placeholder="Email" ngModel> <br>
+    <input type="tel" name="tel" placeholder="Tel"> <br>
+
+    <button>Send</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  title = 'angular_Forms';
+  onSubmit(data) {
+    console.log(data);
+  }
+}
+
+Ekranda form'u doldurup send'e basarsak console'da;
+
+{name: 'Cagatay', surname: 'Demirtas', email: 'acdemirtas61@outlook.com'}
+email: "acdemirtas61@outlook.com"
+name: "Cagatay"
+surname: "Demirtas"
+[[Prototype]]: Object
+
+yazdığını görürüz. Tel'in yazmamasının sebebi ngModel ile işaretlenmemiş olmasıdır.
+
+---
+
+ngForm Directive Detayları
+
+- value: FormGroup içerisindeki her FormControl nesnesinin değerini döndürür.
+
+export class AppComponent {
+  title = 'angular_Forms';
+  @ViewChild("frm", {static:true}) frm:NgForm;
+  //frm referansına karşılık gelen obje ne ise onu elde et. İsmini yine frm ver ve türünü NgForm yap.
+  onSubmit(data) {
+    console.log(this.frm.value);
+  }
+}
+
+ViewChild bir decorator’dür. Template’de local reference olarak tanımlanmış değerlere ulaşmamızı sağlar.
+Form içerisindeki verileri ister submit ile istersek de başka bir event içerisinde o formunu içerisindeki value'dan alabiliriz.
+
+---
+
+valid: Form geçerli ise true, değilse false değerini döndürür.
+touched: Kullanıcı form üzerinde en az bir alana değer girdiyse true değerini döner.
+Submitted: Form submit edildiği taktirde true değerini döndürür.
+
+export class AppComponent {
+  title = 'angular_Forms';
+  @ViewChild("frm", {static:true}) frm:NgForm;
+  //frm referansına karşılık gelen obje ne ise onu elde et. İsmini yine frm ver ve türünü NgForm yap.
+  onSubmit(data) {
+    console.log(`Value: ${this.frm.value}`);
+    console.log(`Valid: ${this.frm.valid}`);
+    console.log(`Touched: ${this.frm.touched}`);
+    console.log(`Submitted: ${this.frm.submitted}`);
+
+    console.log(data)
+  }
+}
+
+---
+
+FormControl Detayları : FormControl, Sayfada bulunan ilgili kontrolün(input, calender, checkbox vb); durumuna(valid, invalid), o anki değerine, varsa doğrulama(validations) işlemlerine ve kullanıcının kontrol üzerinde yapmış olduğu eylemlere ulaşmamızı sağlayan mekanizmadır.
+
+value: İlgili kontrolün değerini döndürür.
+valid: Kontrolün değeri geçerli ise true, değilse false döndürür.
+invalid: Değer geçersizse true, değilse false değerini döndürür.
+touched: Öğeye herhangi bir değer girildiği taktirde true döndürür.
+
+    <input type="text" name="name" #fname="ngModel" ngModel>
+
+---
+
+ngModelGroup Directive'i Nedir?
+
+- Angular'da birden fazla form kontrolünü gruplamak için kullanılan bir directive'dir.
+
+template: `
+  <form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+    <div ngModelGroup="name">
+      <input type="text" name="first" placeholder="Firstname" ngModel> <br>
+      <input type="text" name="middle" placeholder="Middlename" ngModel> <br>
+      <input type="text" name="last" placeholder="Lastname" ngModel> <br>
+    </div>
+  </form>
+  
+Bu şekilde formda ilgili grup elemanları brbiri ile ilişkilendirilir ve bu grup elemanları için ortak bir işlevsellik sağlanabilir.
+
+Örnek:
+
+import { Component, ViewChild } from '@angular/core';
+import { NgForm } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+
+    <input type="text" name="name" placeholder="Name" ngModel> <br>
+    <input type="text" name="surname" placeholder="Surname" ngModel> <br>
+    <input type="email" name="email" placeholder="Email" ngModel> <br>
+    <input type="tel" name="tel" placeholder="Tel"> <br> <br>
+
+    <div ngModelGroup="address">
+      <input type="text" name="country" placeholder="Country" ngModel> <br>
+      <input type="text" name="city" placeholder="City" ngModel> <br>
+      <input type="text" name="address" placeholder="Address" ngModel> <br>
+    </div>
+    <button>Send</button>
+  </form>
+  `,
+})
+
+export class AppComponent {
+  title = 'angular_Forms';
+  onSubmit(data) {
+    console.log(data)
+  }
+}
+
+Console'a bakarsak;
+
+{
+    "name": "Cagatay",
+    "surname": "Demirtas",
+    "email": "acdem@hotmail.com",
+    "address": {
+        "country": "Turkey",
+        "city": "Adana",
+        "address": "Ceyhan"
+    }
+}
+
+address altında gruplandığını görürüz.
+
+---
+
+Component Class'ında Formu Temsil Etme ve Üzerinde İşlemler Gerçekleştirme
+
+  @ViewChild("frm", {static:true}) frm:NgForm;
+
+Form'u component class'ında referans etmek için ViewChild ile yukarıdaki gibi temsil etmek yeterlidir.
+ViewChild ileride detaylı.
+
+Form Kontrollerine İlk Değer Atama
+
+- Form kontrollerine direkt olarak setValue fonksiyonu aracılığıyla aşağıdaki gibi ilk değerleri atanabilmektedir.
+
+ngOnInit(): void {
+    setTimeout(() => {
+      this.frm.setValue({
+        name: {
+          first: "Ahmet",
+          middle: "Cagatay",
+          last: "Dimitri"
+        },
+        surname: "Demirtas",
+        job: "Software Engineer"
+      });
+    }, 200);
+  }
+  
+Burada setTimeout kullanılma sebebi OnInit event'i fırlatıldığında form yapılanmasının henüz initialize edilmemesidir.
+
+Ya da istenilen form kontrolüne de direkt değer atanabilir.
+
+ngOnInit(): void {
+    setTimeout(() => {
+      this.frm.controls["surname"].setValue("Dimitriadis");
+    }, 200);
+  }
+  
+Form'un bir kısmına değer atamak için;
+
+- Form'da birkaç alan değiştirilmek, ilk değerleri atanmak istendiği durumlarda aşağıdaki gibi patchValue fonksiyonu kullanılabilmektedir.
+
+this.frm.control.patchValue({
+	surname: "Demirtasiadis",
+	job: "2"
+})
+
+Form Değerlerini Sıfırlama
+
+- Form değerleri reset, resetForm veya onReset fonksiyonlarıyla sıfırlanabilir.
+
+this.frm.reset();
+this.frm.resetForm();
+this.frm.onReset();
+
+Örnek: Genel Form Yapıtaşlarını Gözlemleyelim.
+
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { NgForm } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form #frm="ngForm" (ngSubmit)="onSubmit(frm.value)">
+
+    <input type="text" name="name" placeholder="Name" ngModel> <br>
+    <input type="text" name="surname" placeholder="Surname" ngModel> <br>
+    <input type="email" name="email" placeholder="Email" ngModel> <br>
+    <input type="tel" name="tel" placeholder="Tel"> <br> <br>
+
+    <div ngModelGroup="address">
+      <input type="text" name="country" placeholder="Country" ngModel> <br>
+      <input type="text" name="city" placeholder="City" ngModel> <br>
+      <input type="text" name="address" placeholder="Address" ngModel> <br>
+    </div>
+    <button>Send</button>
+  </form>
+  `,
+})
+
+export class AppComponent {
+  @ViewChild("frm", {static:true}) frm:NgForm;
+
+  onSubmit(data) {
+    console.log(this.frm);
+    console.log(this.frm.form);
+    console.log(this.frm.controls);
+  }
+}
+
+----------------------------
+
+Model-Driven Forms Yaklaşımı
+
+- Component class'ında formun yapısının nesnel olarak tanımlandığı form yapısıdır.
+- Yani form yapısında kullanılan FormGroup, FormArray, ve FormControl gibi tüm nesneleri kendimizin oluşturduğu ve formu konfigüre ettiği bir form yapılanmasıdır.
+
+- Tüm bunların yanında formun validasyonel kurallarıyla birlikte türlü yapılandırmalarını da bu nesne üzerinden tanımlayabiliyoruz. Mesela password'e 5 karakter sınırı koymak gibi.
+
+- Template-Driven Forms yaklaşımına nazaran işlemlerin büyük kısmı yoğun olarak component class'ı üzerinde gerçekleşmektedir.
+
+- Diğer adı Reactive Forms'dur.
+
+Model-Driven Forms Yaklaşımında Kullanılan Temel Directive'ler Nelerdir?
+
+-> formGroup: Formun kurulmasını sağlayan temel directive'dir. Form elemanlarının component class'ındaki model ile senkronize olmasını sağlar. Bunun için parametre olarak component class'ında tanımlanmış olan FormGroup nesnesini alara çalışma sergiler.
+
+-> formControlName: FormGroup nesnesi içerisindeki herhangi bir FormControl'ü form elemanlarından birine bağlamak ve senkronizasyonu sağlamak için kullanılan directive'dir. İlgili FormControl nesnesine bağlanan form elemanının değeri değiştikçe ilgili nesnenin de değeri otomatik olarak güncellenecektir.
+
+Form Oluşturma Detayları
+
+- Model-Driven Forms yaklaşımıyla  form oluşturmak için öncelikle gerekli directive'leri ve yapıları barındıran 
+ReactiveFormsModule  isimli modülü uygulamada ilgili modüle import ediniz.
+
+- Ardından oluşturulacak formun öncelikle modelini oluşturunuz ve gerekli FormControl'leri tanımlayınız. Bunun için FormBuilder nesnesinden istifade edebilirsiniz.
+
+- Devamında ise HTML kısmında formu bütünsel olarak tasarlayınız ve 'form' etiketini formGroup directive'i ile oluşturulan model'e, form kontrollerini ise modeldeki ilgili FormControl'lerine formControlName directive aracılığıyla bind ediniz.
+
+- Nihai olarak, kullanıcı tarafından doldurulan bu modelin gönderilebilmesi için ngSubmit event'ine bir fonksiyon tanımlayınız.
+
+---
+
+Default Değerleri Verme
+
+this.frm = formBuilder.group({
+      name:["Cagatay"],
+      surname:["Demirtas"],
+      email:["acdem@hotmail"],
+      tel: ["12345"]
+    })
+	
+ile kolayca verebililiriz.
+
+---
+
+formGroupName Directive'i
+
+- Template-Driven Forms yaklaşımındaki ngModelGroup directive'inin Reactive Form yapılanmasındaki muadili olan formGroupName directive'dir. Form kontrollerini gruplayıp işlevsel açıdan bütün olarak yönetmeyi sağlar.
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()"> 
+    <input type="text" placeholder="Name" formControlName="name"> <br>
+    <input type="text" placeholder="Surname" formControlName="surname"> <br>
+    <input type="text" placeholder="Email" formControlName="email"> <br>
+    <input type="text" placeholder="Tel" formControlName="tel"> <br> <br>
+    <div formGroupName="address">
+      <input type="text" placeholder="Country" formControlName="country"> <br>
+      <input type="text" placeholder="City" formControlName="city"> <br>
+      <input type="text" placeholder="Address" formControlName="address">
+    </div>
+    <button>Send</button>
+  </form>
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder){
+    this.frm = formBuilder.group({
+      name:[""],
+      surname:[""],
+      email:[""],
+      tel: [""],
+      address: formBuilder.group({
+        country: [""],
+        city: [""],
+        address: [""]
+      })
+    })
+  }
+
+  onSubmit(){
+    console.log(this.frm.value)
+  }
+}
+
+- Dikkat ederseniz formGroupName directive'ini kullanabilmek için yine FormBuilder ile bir FormGroup oluşturmamız gerekmektedir. Bir nevi iç içe FormGroup yapısı oluşturuyoruz.
+
+---
+
+Validation Tanımlama
+
+- Reactive Form Yapılanmasının en güzel yanlarından birisi de validation kurallarını tanımlarken sağladığı kolaylıktır.
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()"> 
+    <input type="text" placeholder="Name" formControlName="name"> <br>
+    <input type="text" placeholder="Surname" formControlName="surname"> <br>
+    <input type="text" placeholder="Email" formControlName="email"> <br>
+    <input type="text" placeholder="Tel" formControlName="tel"> <br> <br>
+    <div formGroupName="address">
+      <input type="text" placeholder="Country" formControlName="country"> <br>
+      <input type="text" placeholder="City" formControlName="city"> <br>
+      <input type="text" placeholder="Address" formControlName="address">
+    </div>
+    <button>Send</button>
+  </form>
+
+  Valid: {{frm.valid}} 
+  //burada aşağıdaki validasyon işlemleri sonucunun uygulanıp uygulanmadığını kontrol ediyoruz.
+  //Eğer ki doldurulması gerekli alanlar doldurulmazsa false verecektir.
+  `,
+})
+export class AppComponent {
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder){
+    this.frm = formBuilder.group({
+      name:["", Validators.required],
+      surname:["", Validators.required],
+      email:[""],
+      tel: [""],
+      address: formBuilder.group({
+        country: [""],
+        city: [""],
+        address: ["", Validators.required]
+      })
+    })
+  }
+//name, surname ve address field'larının doldurulmasını zorunlu kıldık.
+  onSubmit(){
+    console.log(this.frm.value)
+  }
+}
+
+İleride daha detaylı.
+
+Not: Bir form kontrolünün validasyon kurallarını belirlerken ister tekil olarak isterseniz de Array halinde belirleyebilirsiniz. Çoğul validasyon durumlarında Array zorunludur.
+
+frm: FormGroup;
+  constructor(private formBuilder: FormBuilder){
+    this.frm = formBuilder.group({
+      name:["", Validators.required],
+      surname:["", Validators.required],
+      email:["",[
+        Validators.required,
+        Validators.email
+      ]],
+      tel: ["", [
+        Validators.required,
+        Validators.max(100)
+      ]],
+      address: formBuilder.group({
+        country: [""],
+        city: [""],
+        address: ["", Validators.required]
+      })
+    })
+  }
+  
+---
+
+onlySelf Özelliği
+
+- Angular mimarisinde varsayılan olarak herhangi bir form öğesinin değerinde bir güncelleme olduğunda form yapılanması validasyonel durumların hepsini basmaklı olarak en üst düzeye kadar kontrol edecektir. Bunu engellemek için onlySelf özelliğini kullanabilir ve herhangi bir form kontrolde olacak şekilde değişiklikte komple formun değil, sadece ilgili kontrolün sorumluluğu olduğunu ifade edebiliriz.
+
+this.frm = formBuilder.group({
+	name: ["", Validators.required],
+	surname: [""],
+	.....
+	
+görüldüğü üzere name alanı required olarak ayarlanmıştır. Yani zorunluluk arz eden bir validasyona sahiptir. Dolasıyla bu alan üzerinde yapılacak herhangi bir güncelleme durumu tüm formun kontrol edilmesini sağlayacak ve formun valid özelliğini etkileyecektir.
+
+this.frm.controls["name"].setValue("Mahmut");
+
+bu şartlarda yukarıdaki kodu tetiklersek eğer tüm form geçerliliği kontrol edilecek, dolayısıyla valid özelliğinin değeri değişecektir.
+
+this.frm.controls["name"].setValue("Mahmut", { onlySelf: true });
+ya da
+this.frm.get("name").setValue("Farozlu İsmail", {onlySelf: true})
+
+yukarıdaki gibi onlySelf özelliğine true değeri verilirse name kontrolü üzerinde yapılan bu değişiklik sadece kendisini etkileyecek ve tüm formdaki geçerlilik durumu kontrol edilmeyecektir. Böylece valid özelliğinin değeri değişmeyecektir.
+
+Sonuç olarak,
+validasyonlari form kontrolleri üzerinde kontrol gerçekleştirmemizi sağlayan ama bütünsel olarak formu ilgilendiren kurallardır. Dolasıyla onlySelf özelliği ile  sadece form kontrolü seviyesinde yapılan bu tarz kontroller ile ilgili kontrolde validasyon kuralı geçerli olsa da form açısından bir değerlendirme yapılmayacağı için bu durum valid özelliğine yansımayacaktır.
+
+---
+
+valueChanges ve statusChanges
+
+Angular'da form yapılanması değer değişimi ve geçerliilk durumu olmak üzere iki olay üzerine refleks'te bulunur.
+
+valueChanges: Formdaki kontrolden birinin değeri değiştiğinde fırlatılır.
+statusChanges: Formun geçerlilik değiştiğinde fırlatılır.
+
+this.frm.valueChanges.subscribe({
+  next: data => {
+    console.log(data)
+  }
+})
+
+this.frm.statusChanges.subscribe({
+  next: data => {
+    console.log(data)
+  }
+})
+
+//Invalid
+
+{
+    "name": "Cagatay",
+    "surname": "Demirtas",
+    "email": "acdem@hotmail.com",
+    "tel": "123",
+    "address": {
+        "country": "Turkey",
+        "city": "Adana",
+        "address": "Ceyhan"
+    }
+}
+
+//Valid
+
+{
+    "name": "Cagatay123xxTR",
+    "surname": "Demirtas",
+    "email": "acdem@hotmail.com",
+    "tel": "123",
+    "address": {
+        "country": "Turkey",
+        "city": "Adana",
+        "address": "Ceyhan"
+    }
+}
+
+Tabi istersek herhangi bir form elemanı bazında da bu event'leri kullanabiliriz.
+
+this.frm.get("name").valueChanges.subscribe({
+  next: data => {
+    console.log(data)
+  }
+})
+
+this.frm.get("name").statusChanges.subscribe({
+  next: data => {
+    console.log(data)
+  }
+})

@@ -1,0 +1,289 @@
+Nedir bunlar?
+
+- Angular'da bir component'i kullanabilmek için onu oluşturmak yetmemekte, kullanılacağı modüle declare edilmesi gerekmektedir.
+
+- Ya da declare edildiği modülün ihtiyaç olan başka bir modüle import edilmesi gerekmektedir.
+
+- Yani bir component'in mimarisel olarak kullanılabilmesi için maliyet ödenmesi gereklidir.
+
+- Bu maliyet özellikle Angular'ı yeni öğrenenler için öğrenme hızını oldukça yavaşlatmaktadır.
+
+- Çünkü bir component'i kullanabilmek için modüler yapının anlaşılması ve bu yapının gereği olan export, declare vs gibi davranışların kafada oturması gereklidir.
+
+İşte bu maliyetlerden kurturabilmek için Angular 14'te Component yapısı gelmiştir.
+
+- Angular'da standalone component yapısı sayesinde uygulamadaki modüler bağımlılıklar törpülenmekte ve daha hızlı kolay bir geliştirme süreci sağlanabilmektedir.
+
+---
+
+Standalone Component Oluşturma
+
+app klasörü altında components klasöründe standalone.component.ts oluşturalım.
+
+oluşturduğumuz component'i standalone hale getirmek istiyorsak;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-standalone',
+  templateUrl: './standalone.component.html',
+  styleUrls: ['./standalone.component.css'],
+  standalone: true //yazmamız yeterli.
+})
+export class StandaloneComponent {
+
+}
+
+artık bu bir standalone component'dir.
+
+artık app.module'de ya da herhangi bir modülde declare edilemez.
+
+ya da istersek Angular CLI üzerinden de standalone olarak bir component oluşturabiliriz.
+
+ng g c components/standalone2 --standalone
+
+ile oluşturduğumuzda terminalde bir önceki standalone gibi app.module.ts'in update edilmediğini görüzüz.
+
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-standalone2',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './standalone2.component.html',
+  styleUrls: ['./standalone2.component.css']
+})
+export class Standalone2Component {
+
+}
+
+ile oluşturacaktır.
+
+---
+
+Standalone Component Nasıl Kullanılır?
+
+- Standalone component hangi modülde kullanılacaksa import edilmelidir. Modülde declare edilmez ama kullanılacaksa eğer kullanılacağı modülde import edilmesi gereklidir.
+
+standalone ve standalone2 isimleriyle oluşturmuş olduğumuz component'leri app.component'da kullanalım.
+
+app.module.ts'de;
+
+
+@NgModule({
+    declarations: [
+        AppComponent,
+        HomeComponent
+    ],
+    providers: [CustomStrategy],
+    bootstrap: [AppComponent],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        StandaloneComponent,
+		Standalone2Component
+    ]
+})
+export class AppModule { }
+
+import edip,
+
+app.component.html'de selector'lar ile;
+
+<app-standalone></app-standalone>
+<app-standalone2></app-standalone2>
+
+
+Not: Bir standalone component'in başka bir component'de kullanılabilmesi için yani component seviyesinde import edilebilmesi için hedef component'in de standalone olması gereklidir.
+Yani component seviyesinde import'u app.component.ts'e yapamayız. (ileride detaylı)
+
+---
+
+Bir Standalone Yapıda Başka Bir Standalıne Yapıyı Kullanmak
+
+- Standalone yapılar, herhangi bir modüle bapğımlılıkları olmadığı için kendi aralarında import edilebilmektedirler.
+
+standalone2'yi standalone'da kullanalım.
+
+standalone.component.ts;
+
+import { Component } from '@angular/core';
+import { Standalone2Component } from '../standalone2/standalone2.component';
+
+@Component({
+  selector: 'app-standalone',
+  templateUrl: './standalone.component.html',
+  styleUrls: ['./standalone.component.css'],
+  standalone: true,
+  imports: [Standalone2Component] //'u import edebiliriz.
+})
+export class StandaloneComponent {
+
+}
+
+ve
+
+standalone.component.html'de;
+
+<p>standalone works!</p>
+
+<app-standalone2></app-standalone2>
+
+---
+
+Bir Standalone Yapıda Modüler Yapıları Kullanmak
+
+- Standalone yapılarda modüler yapıları kullanabilmek için @Component decorator'u içerisindeki imports özelliğine ilgili modüllerin tanımlanmaları gerekmektedir.
+
+Örneğin standalone component'in içerisinde Form'lar ile ilgili bir çalışma yapılacaksa FormsModule'ü import etmemiz gereklidir.
+
+@Component({
+  selector: 'app-standalone',
+  templateUrl: './standalone.component.html',
+  styleUrls: ['./standalone.component.css'],
+  standalone: true,
+  imports: [Standalone2Component, FormsModule] //gibi.
+})
+export class StandaloneComponent {
+  data: any
+}
+
+ve
+
+standalone.component.html'de;
+
+<p>standalone works!</p>
+
+<input type="text" [(ngModel)] ="data">{{data}}
+
+<app-standalone2></app-standalone2>
+
+---
+
+Standalone Yapılarda Routing ve Lazy Loading
+
+- Uygulama standalıne altyapısı sayesinde modüler yapılanmadan soyutlandığına göre bu durum routing işlemleri için de ayrı bir nitelik kazandırmaktadır.
+
+- Nihayetinde lazy loading süreçlerinde modüler yapılanmaları loadChildren ile bildiriyorken, standalone componentleri ise modülleri olmadığı için loadComponent fonksiyonu ile bildirmemiz gerekmektedir.
+
+app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [
+  { path: "standalone", loadComponent: () => import("./components/standalone/standalone.component").then(s => s.StandaloneComponent)},
+  { path: "standalone2", loadComponent: () => import("./components/standalone2/standalone2.component").then(s => s.Standalone2Component)}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+bunları kullanabilmek için;
+
+app.component.html'de;
+
+<a href="standalone">Standalone</a> | <a href="standalone2">Standalone2</a>
+
+<router-outlet></router-outlet>
+
+http://localhost:4200/standalone ve
+http://localhost:4200/standalone2 'de route davranışını sergiletebiliriz.
+
+---
+
+Standalone Component'leri Kullanarak Uygulamayı Önyükleme (Preload)
+
+- Bir angular uygulamasında uygulamanın root component'i olarak 'AppComponent' yerine bir standalone component kullanmak ve bu component'le önyükleme işlemini gerçekleştirmek istiyorsak bunu root modüle olan 'AppModule'da yapamayız.
+
+- Bu işlemin yapılabilmesi için 'AppModule'ün kaldırılması ve 'main.ts' dosyasında bootstrapApplication fonksiyonunun aşağıdaki gibi kullanılması gerekmektedir.
+
+Dolayısıyla ana modülde bootstrap: [StandaloneComponent] 'i kullanamıyorsak, ve uygulamanın ilk başlangıç component'i olarak StandaloneComponent'i hedefliyorsak, o zaman ana modülün var olmasının bir anlamı yoktur. (kaldırmasakta olur ama yani niye var olsun kullanılmayacaksa...)
+
+main.ts'de;
+
+// import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+// import { AppModule } from './app/app.module';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { StandaloneComponent } from './app/components/standalone/standalone.component';
+
+//uygulamanın ana modülü olarak tanımlama yapılan aşağıdaki kodları kapatalım.
+// platformBrowserDynamic().bootstrapModule(AppModule)
+//   .catch(err => console.error(err));
+
+bootstrapApplication(StandaloneComponent)
+
+ayrıyetten,
+
+bu tanımladığımız standalone component'in selector'ını index.html'de;
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PreloadingStrategy</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-standalone></app-standalone>
+</body>
+</html>
+
+
+ile artık başlangıç component'imiz bir standalone component.
+
+artık istersek app.module.ts'i uygulamadan kaldırabiliriz.
+
+Ve hatta app.component.html,
+app.component.spec.ts
+app.component.ts,
+app.component.html'i de kaldırabiliriz.
+
+Ve uygulamanın modüler bağımlılığını törpülemiş olduk.
+
+---
+
+CommonModule Yeniliği
+
+- Angular'da built-in olarak gelen *ngFor, *ngIf gibi directive'ler ve pipe'lar normalde CommonModule içerisinde gelmektedir.
+
+- CommonModule kullansakta kullanmasakta bu yapıları uygulamaya dahil etmektedir.
+
+- Halbuki bizler uygulamada built-in olarak gelen bu yapılardan sadece lazım olanları yüklemek isteyebilir ve uygulama boyutunu şişirmek istemeyebiliriz.
+
+İşte bunun için Angular 15'te CommonModule'a yenilik gelmiştir.
+
+Artık kullanacağımız tüm pipe ve directive'leri;
+
+import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  template:`
+  {{100 | currency}}
+
+  <div *ngIf="0">Merhaba</div>
+  `,
+  imports: [NgIf, NgFor, CurrencyPipe]
+})
+export class HomeComponent {
+
+}
+
+gibi tek tek import edebiliriz.
+
+ya da 
+
+  imports: [CommonModule]
+  
+ile tek seferde hepsini...
+
+

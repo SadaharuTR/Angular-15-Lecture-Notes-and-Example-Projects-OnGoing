@@ -1,0 +1,272 @@
+Route Data Passing Nedir?
+
+- Route Data Passing, Angular routing mekanizması aracılığıyla sayfalar arası veri aktarmanın bir yoludur.
+
+- Sayfalar arasında veri aktarma deyince akla router parameters ya da query string gelmektedir.
+Route Data Passing'in farkı ise;
+
+Route parameter ve query string yapılanmaları, route data passing ile aynı amaca hizmet etmektedirler.
+Yani hepsi aynı amaca hizmet eden farklı veri taşıma yöntemleridir.
+
+- Tabi ki küçükte olsa farklılıklar mevcuttur. Misal olarak, route parameters ve query string yapılanmaları; verileri, url'nin bir parçası olarak taşırken, route data passing ise url'den bağımsız olarak veri taşıma işlemini gerçekleştirir.
+
+- Yani verileri URL'den ziyade router modulünün 'data' özelliği aracılığıyla taşımaktadır. Böylece router data passing yöntemi sayesinde url'lerin daha temiz kalması ve okunaklı olması sağlanmaktadır.
+
+- Bir diğer fark ise route data passing'in diğer yöntemlere nazaran verileri güvenli bir şekilde taşımasına izin vermesidir. Çünkü veriler, URL'nin bir parçası olmayacağından daha korunaklı/gizli bir şekilde sayfalar arası transfer gerçekeleşecektir.
+
+- Sonuç olarak, route data passing'in, sayfalar arasında verilerin daha temiz, daha okunaklı ve daha güvenli bir şekilde taşınmasına izin veren çağdaş bir yöntem olduğunu ve bunun yanında route parameter ve query string yöntemlerinin ise URL'nin bir parçası olarak veri taşımanın geleneksel yöntemleri olduğunu söyleyebiliriz.
+
+Peki bir sayfaya yönlendirme neticesinde route data passing ile herhangi bir veriyi nasıl gönderebiliriz?
+
+- Bunun için ilgili sayfanın route tanımında aşağıdaki gibi bir çalışmanın yapılması gerekmektedir.
+
+{
+	path: "products", component: ProductComponent,
+	data: { value1: "Value1", value2: "Value2" }
+}
+
+
+Burada görüldüğü üzere 'products' path'ine route data passing yöntemiyle bir object tanımlanmıştır.
+Bu object içerisinde herhangi btürden değerler barındırabilir.
+
+- Route'a tanımlanmış bu değeri elde etmek için ise bu rota ile ilişkilendirilmiş component içerisinde aşağıdaki gibi bir çalışma yapılması yeterli olacaktır.
+
+@Component({
+	selector: 'app-product',
+	template: `
+	<h5>Products</h5>
+	value1: {{_data.value1}} <br>
+	value2: {{_data.value2}}
+	`
+})
+
+export class ProductComponent implements OnInit {
+	constructor(private activatedRoute: ActivatedRoute) { }
+	_data: any;
+	ngOnInit(): void {
+		this.activatedRoute.data.subscribe((data: any) => {
+			this._data = data;
+		})
+	}
+}
+
+gibi kullanabiliriz.
+
+Yeni bir Angular projesi açalım.
+
+app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+import { ProductComponent } from './components/product/product.component';
+
+const routes: Routes = [
+  { path: "", component: HomeComponent},
+  { path: "home", component: HomeComponent},
+  { 
+    path: "products", component: ProductComponent,
+    data: { key1: 'value1', key2: 'value2' }
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+belirtelim.
+
+Sonra bu değerleri okuyabilmek için ilgili component'in ts'inde;
+
+product.component.ts;
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-product',
+  template:`Product`
+})
+export class ProductComponent implements OnInit{
+  constructor(private activatedRoute: ActivatedRoute) { }
+  ngOnInit(): void {
+    this.activatedRoute.data.subscribe(data => {
+      console.log(data)
+    })
+  }
+}
+
+ile tarayıcı konsolunda görebiliriz.
+
+app.component.ts'i de görelim;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template:`
+  <h2>This is AppComponent</h2>
+  <a routerLink="home">Home</a> | <a routerLink="products">Product</a> <br>
+  <router-outlet></router-outlet>
+  `
+})
+export class AppComponent {
+  title = 'router_Outhers';
+}
+
+---
+
+Buradaki örnekte route data passing davranışı statik olarak uygulamış bulunuyoruz.
+İstendiği taktirde bu davranışı dinamik bir şekilde de aşağıdaki gibi uygulayabiliriz.
+
+<a routerLink="products" [state]="{ value1: 'Value1', value2: 'Value2' }">Product</a>
+
+Bu şekilde routerLink'in kullanıldığı a tag'inin olduğu noktada state direktifine karşılık verileri bu şekilde vererek ve bu verileri dinamik bir şekilde;
+
+export class ProductComponent{
+	constructor(private router: Router) {
+		this._data = this.router.getCurrentNavigation().extras.state;
+	}
+	_data: any;
+}
+
+getCurrentNavigation() fonksiyonu ile okumamız gerekir. Bu okuma sürecinde Router servisini kullanırız.
+Bu servisi inject ettikten sonra state'deki verileri dinamik olarak elde edebiliriz.
+
+Uygulamamızda;
+
+app.component.ts'de;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template:`
+  <h2>This is AppComponent</h2>
+  <a routerLink="home">Home</a> | <a routerLink="products" [state]="{key3:'value3', key4: 'value4'}">Product</a> <br>
+  <router-outlet></router-outlet>
+  `
+})
+export class AppComponent {
+  title = 'router_Outhers';
+}
+
+
+buradaki state direktifine karşılık vermiş olduğumuz dinamik verileri hedef component'de yakalamak istiyorsak;
+
+product.component.ts;
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+
+@Component({
+  selector: 'app-product',
+  template:`Product`
+})
+export class ProductComponent implements OnInit{
+  constructor(private activatedRoute: ActivatedRoute, private router: Router) { 
+    console.log(router.getCurrentNavigation()?.extras.state);
+  }
+  ngOnInit(): void {
+    this.activatedRoute.data.subscribe(data => {
+      console.log(data)
+    })
+  }
+}
+
+konsolda ilgili değerleri görebiliriz.
+
+Not: getCurrentNavigation() fonksiyonuna sadece constructor üzerinden erişebiliriz.
+
+----------------------------
+
+Router Event Nedir?
+
+- Angular'da event'ler, Angular Router'ın farklı aşamalarındaki değişiklikleri yakalamak için kullanılan olaylardır.
+
+NavigationStart: Yeni bir navigasyon başladığı taktirde tetiklenir.
+
+RoutesRecognized: Yönlendirmenin gerçekleştirileceği rotalar tanımlandığında bu olay tetiklenir.
+
+GuardsCheckStart: Yönlendirmenin yapılacağı route'un mevcut guard'ları tetiklendiğinde bu olay tetiklenir.
+
+ChildActivationStart: Yönlendirilecek rotanın child rotaları etkinleştirildiğinde bu olay tetiklenir.
+
+ActivationStart: Rotanın etkinleştirilmesi sırasında bu olay tetiklenir.
+
+GuardsCheckEnd: Guard yapılanmalarının kontrolü sona erdiğinde bu olay tetiklenir.
+
+ResolveStart: Yönlendirme yapılacak sayfanın verileri resolve edilmeye başlandığında bu olay tetiklenir.
+
+ActivationEnd: Rotanın etkinleştirilmesi tamamlandığında bu olay tetiklenir.
+
+ResolveEnd: Yönlendirme yapılacak sayfanın verileri resolve edildiğinde bu olay tetiklenir.
+
+NavigationEnd: Navigasyon tamamlandığında tetiklenir.
+
+NavigationCancel: Navigasyon iptal edildiğinde bu olay tetiklenir.
+
+NavigationError: Navigasyon sürecinde bir hata oluşursa bu olay tetiklenir.
+
+Bu event'ler bu sıralama ile tetiklenirler.
+
+import {Component, OnInit} from '@angular/core'
+import {
+  Router,
+  Event,
+  NavigationStart,
+  RoutesRecognized,
+  GuardsCheckStart,
+  ChildActivationStart,
+  ActivationStart,
+  GuardsCheckEnd,
+  ResolveEnd,
+  NavigationEnd,
+  NavigationCancel,
+  NavigationError,
+  Scroll,
+  ResolveStart,
+  ActivationEnd
+} from '@angular/router';
+
+@Component({
+  selector: 'app-router-event-deneme',
+  template: ``
+})
+export class RouterEventDenemeComponent implements OnInit {
+  constructor(private router: Router) {
+
+  }
+  ngOnInit(): void {
+    this.router.events.subscribe((event: Event) => {
+      if (event instanceof NavigationStart)
+        console.log(`'NavigationStart': ${event}`);
+      else if (event instanceof RoutesRecognized)
+        console.log(`'RoutesRecognized': ${event}`);
+      else if (event instanceof GuardsCheckStart)
+        console.log(`'GuardsCheckStart': ${event}`);
+      else if (event instanceof ChildActivationStart)
+        console.log(`'ChildActivationStart': ${event}`);
+      else if (event instanceof ActivationStart)
+        console.log(`'ActivationStart': ${event}`);
+      else if (event instanceof GuardsCheckEnd)
+        console.log(`'GuardsCheckEnd': ${event}`);
+      else if (event instanceof ResolveStart)
+        console.log(`'ResolveStart': ${event}`);
+      else if (event instanceof ActivationEnd)
+        console.log(`'ActivationEnd': ${event}`);
+      else if (event instanceof ResolveEnd)
+        console.log(`'ResolveEnd': ${event}`);
+      else if (event instanceof NavigationEnd)
+        console.log(`'NavigationEnd': ${event}`);
+      else if (event instanceof NavigationCancel)
+        console.log(`'NavigationCancel': ${event}`);
+      else if (event instanceof NavigationError)
+        console.log(`'NavigationError': ${event}`);
+      else if (event instanceof Scroll)
+        console.log(`'Scroll': ${event}`);
+    })
+  }
+}

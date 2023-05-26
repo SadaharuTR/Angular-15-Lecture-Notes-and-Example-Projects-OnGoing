@@ -1,0 +1,89 @@
+Angular Nedir?
+
+- Angular, Google tarafından Javascript yemelli geliştirilen, SPA(single page application) oluşturmak için tasarlanmış olan open source Web Uygulama mimarisidir.
+
+- SPA ise, bir web uygulamasının tüm işlevselliğini tek bir sayfa üzerinde içeren tasarım şeklidir. Yani SPA olan bir uygulamada ana(main) olan sayfa yüklendiği taktirde uygulamanın tüm bileşenleri o anda yüklenmektedir. Böylece sayfa geçişleri esnasında hızlı bir kullanıcı deneyimi eşliğinde yüksek performans sağlanmış olunacaktır.
+
+- SPA mimariler genellikle Javascript dili kullanılarak geliştirilirler. Angular başta olmak üzere React ve Vue.js'de bir SPA mimarileridir.
+
+- Angular'da geliştirme yapabilmek için öncelikle Angular CLI adlı asistanı yüklememiz gerekmektedir. Bu asistan üzerinden Angular uygulamaları oluşturmaktan başlayarak
+Angular'ın temel yapı taşlarını üretebilecek ve hızlıca geliştirmelerimize odaklanacağız.
+
+- Angular CLI'ı yükleyebilmek için Node.JS'i yüklememiz gerekmektedir. Çünkü Angular CLI sadece Node.JS runtime'ında çalışmaktadır. Sitesine gidip indirdikten sonra,
+cmd ya da powershell'den npm install -g @angular/cli talimatının verilmelidir. -g ile global olarak indiririz. Yani tüm PC'den erişilebilir olacaktır. ng version ya da ng help yazarak indirilen sürümü kontrol edebiliriz.
+
+Angular CLI Talimatlar
+
+ng version: Kullanılan angular sürümü bilgisini verir.
+ng new: Sadece bir şablonda yeni bir Angular uygulaması oluşturur.
+ng generate: Angular yapı taşlarının üretilmesini sağlar.
+ng serve: Angular uygulamasının ayağa kaldırılmasını sağlar.
+ng build: Angular uygulamasının build edilmesini sağlar.
+
+- Angular'ı geliştirirken Javascript kullanacağız. Lakin JS'nin bir konsepti olan Typescript'ten istifade edeceğiz.
+
+- Typescript ise JS'in OOP nimetlerinden faydalanarak daha okunaklı ve anlaşılır bir şekilde geliştirmemizi sağlayan, derlendiği taktirde JS çıktısı veren bir konsepttir. Microsoft tarafından geliştirilmektedir.
+
+Projeyi oluşturalım;
+PS C:\Users\acdem> ng new proje1
+
+Projeyi oluşturduktan sonra,
+
+PS C:\Users\acdem> cd
+PS C:\Users\acdem> cd proje1/ 
+PS C:\Users\acdem\proje1> code .
+
+ile Visual Studio Code'da açalım.
+
+Proje Yapılanması
+
+-node_modules dizininde uygulamada kullanılan paketler bulunur.
+-src'de yani source klasöründe uygulama ile ilgili hayati dosyalar bulunur. Çalışmaların çok büyük bir kısmı burada gerçekleştirilir.
+
+-assets'de ise uygulama ile ilgili resin, icon, video vs. dosyalarıbulunur.
+-index.html temel geliştirme sayfasıdır. Uygulamanın temel direktiflerini barındırır. Single Page olarak kullanacağımız tekil sayfadır.
+-main.ts uygulamanın başlangıç dosyasıdır. C#'daki Program.cs gibi düşünebiliriz. Uygulama sürecinde hangi modülün ana modül olacağı burada belirtilir.
+-editorconfig editörle ilgili temel konfigürasyonları gerçekleştirir.
+
+-angular.json uygulamadaki script, style, budgets vs. gibi temel konfigürasyonların yapıldığı dosyadır.
+-package-lock.json uygulamada kullanılan paketlerin sürümleri hakkında bilgi içerir. Böylece uygulama sürecinde paketlerin sürümlerini ve bağımlılıkları doğru şekilde yönetmek için kullanılmaktadır.
+-package.json uygulamada kullanılan paketler bu dosyada listelenmektedir.
+-ts.config typescript compiler konfigürasyonlarını barındırır.
+-src/app klasörü içerisinde uygulamada kullanılacak component'leri ve diğer Angular yapı taşlarını barındıracak klasördür.
+	-app-routing.module.ts -> uygulamada sayfalar arası route bilgilerini konfigüre ettiğimiz modül dosyasıdır.
+	-app.component.html -> uygulamada kullanılan ana component'in dosyasıdır.
+	-app.component.ts -> ana component'in kodlama dosyasıdır.
+	-app.module.ts -> uygulamanın ana/root modülüdür.
+	
+Studio Code terminalinde ng serve yazarak hazır olarak oluşturulmuş uygulamamızı ayağa kaldırabiliriz.
+
+----
+
+Angular Mimarisinin Yapısı Nasıldır?
+
+- Angular çalışma mantığı olarak MVC pattern'a dayanmaktadır. Böylece uygulamanın veri modeli, görüntüleme ve işleme/operasyon katmanlarını ayrıştırmakta ve uygulama kodunu daha okunabilir ve düzenli hale getirerek geliştirme sürecini verimli kılmaktadır.
+
+Angular'ın Yapıtaşları Nelerdir?
+
+- Angular, uygulama geliştirebilmek için bazı temel öğelerden istifade etmektedir. Bu öğeler; Components, Data Binding, Directives, Decorators, Modules, Services, Templates, Dependency Injection, Metadatas, Pipes, Guards'tır.
+
+Modules: Angular mimiarisinde module yapılanması uygulama öğelerinin gruplandırılmasını sağlamaktadır. Böylece uygulama daha düzenli bir şekilde inşa edilebilir hale gelmektedir. Modüller, uygulamanın çeşitli parçalarını(components, services vs.) bir araya getirerek bir bütün olarak kullanılabilir kılmaktadırlar. Modüller birbirlerini import etmedikleri taktirde, bir modüldeki parça diğer modul altındaki parçalar tarafından erişilemez. Ayrıca modüller Dependency Injection pattern'i kullanarak uygulamadaki öğeler arasında bağımlılıkları yönetmekte ve böylece test edilebilirlik ve bakım açısından kolay lık sağlamaktadır. Modüller ayrıca, Angular'ın işlemleri optimize etmek için kullandığı Lazy Loading özelliğini de destekleyerek sadece ihtiyaç duyulduğu taktirde yüklenmelerini de sağlayabilmektedir.
+
+Components: Uygulamanın görüntüleme katmanını ifade eden ve veri modeliyle etkileşim kurarak kullanıcılara uygulamanın görsel kısmını sunan yapılardır.
+Yapısal olarak birer HTML ve Typescript dosyalarından oluşmaktadırlar. Component'ler veri modeliyle etkileşim kurabilmek için Data Binding özelliğini kullanmaktadır. İhtiyaç duydukları servislerin instance'larını Dependency Injection ile elde edebilirler. Ortalama bir Angular uygulaması, birbirleriyle etkileşimli bir dizi component barındırarak dinamik ve etkileşimli işlevsellik gösterebilmektedir.
+
+Data Binding: Angular mimarisi bu özellik sayesinde  veri modeli ile template'ler arasında veri akışını dinamik bir şekilde sağlayabilmektedir. Böylece uygulamadaki verisel değişiklikler otomatik olarak sayfalara yansıtabilmektedir. Angular'da Data Binding çift yönlü çalışmaktadır (two way data binding) yani veri modeli güncellendiği zaman template'de template güncellendiği zaman ise veri modeline anında yansıtılmaktadır.
+
+Dependency Injection: Angular mimarisi, uygulamada mevcut öğeler arasındaki başımlılıkları yönetebilmek için Dependency Injection pattern'ını kullanmaktadır.
+
+Directives: HTML nesnelerinin davranışlarını ve görünümlerini yönetebilmemizi sağlayan özel etiketlerdir. Angular'ın güçlü özelliklerinden biridir.
+
+Decorators: Typescript dilinin bir özelliğidir ve Angular tarafından kullanılır. Decorator'lar sayesinde bir class'a yahut herhangi bir class member'ına -metadata- ekleyebilmekteyiz. Böylece ilgili yapının davranışı hakkında bir öntanımda bulunmaktayız. Misal olarak, bir class'ı @Component decorator'u ile işaretlersek eğer bir component; yok eğer @Injectible ile işaretlersek bir service olacağı anlamına gelmektedir.
+
+Services: Angular'da genellikle dış servislerle (API-endpoint) iletişim kurmak, karmaşık iş operasyonlarını veya business logic'leri yürütmek veya component'ler arasında iletişim sağlayabilmek için kullanılan fiili yapılanmalardır. Tüm operasyonel/fiili/kodlama gerektiren işlemler servislerde yapılmaktadır.
+
+Template: component'lerin HTML kısmıdır. İçerisinde HTML kodları barındırabileceği gibi özel Angular elemanları, directive'ler, pipe'lar vs barındırabilir ve bunları işlevlerine göre çalıştırabilirler. Data Binding özeliğini desteklemekte ve böylece veri modeli ile dinamik etkileşime girebilmektedirler.
+
+Guards: Route erişimlerinin izin kontrolleri Guard yapılanması üzerinden gerçekleştirilir. Sayfalar arası geçiş süreçlerinde ilgili kullanıcının erşimine izin verilip verilmeyeceine dari krar veren yapılanmalardır. Angular uygulamasının güvenliği ve gizliliği Guard yapılanması tarafından üstlenilmektedir. 
+
+Pipes: Verilerin görüntülenme süreçlerinde işlenmesine yönelik işlevsellik sağlayan yapılardır. Misal olarak, bir verinin tarihsel yahut parasal biçime dönüştürülmesi pipe'lar sayesinde gerçekleştirilebilir.

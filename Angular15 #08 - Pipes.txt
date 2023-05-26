@@ -1,0 +1,264 @@
+Pipe Nedir?
+
+- Bir verinin görüntülenme şeklini değiştirmek için kulanılan Angular'a özel yapıdır.
+- Örneğin, bir tarih verisinin belirli bir formatta görüntülenmesini, bir sayısal değerin pra şekline ifade edilmesini isteyebiliriz.
+- İşte bu tarz ihtiyaçlara istinaden verinin orjinalliğini bozmaksızın sadece görsel kısımda bir manipülasyon gerçekleştirmeyi pipe sayesinde gerçekleştirebiliriz.
+
+Hazır Pipe'lar Nelerdir?
+
+- Birçok işlem için built-in olarak tasarlanmış pipe'lar mevcuttur. CurrencyPipe, DatePipe, KeyValuePipe, SlicePipe, JsonPipe, PercentPipe....
+
+Örnek:
+
+Tüm harflerini büyüterek yazalım. 
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  {{name | uppercase}} //Pipe kullanımı.
+  `
+})
+export class AppComponent {
+  name = 'Cagatay'
+}
+
+Parametre de alabilen Pipe'lar vardır.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  {{name | slice: 1:3}} //ag harflerini al. Slice parametre alabilen bir Pipe'dır.
+  `
+})
+export class AppComponent {
+  name = 'Cagatay'
+}
+
+---
+
+CurrencyPipe:  Sayısal değerleri parasal formata dönüştürür.
+
+{{1000 | currency}} -> $1,000.00
+
+TL yapmak için default para biriminde app.module.ts'daki providers'a ekle: {provide: DEFAULT_CURRENCY_CODE, useValue: 'TL'} (ileride detaylı)
+
+ya da {{1000 | currency: '₺'}} parametre olarak verebiliriz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  {{para | currency: '₺'}}
+  `
+})
+export class AppComponent {
+  para: number = 1000
+}
+
+Ekranda ₺1,000.00 yazacaktır.
+
+---
+
+DataPipe: Tarihsel verileri biçimlendirir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  
+  {{'04.14.1994' | date }} <br>
+  {{'04.14.1994' | date : 'fullDate' }} <br>
+  {{'04.14.1994' | date : 'medium' }} <br>
+  {{'04.14.1994' | date : 'shortTime'}} <br>
+  {{'04.14.1994' | date : 'mm:ss'}} <br>
+
+  `
+})
+export class AppComponent {
+  dateTime = new Date()
+}
+
+Apr 14, 1994
+Thursday, April 14, 1994
+Apr 14, 1994, 12:00:00 AM
+12:00 AM
+00:00
+
+---
+
+SlicePipe: Dizilerdeki verilere belirli aralıklarla ulaşılmasını sağlar.
+
+{{['C', 'a', 'g', 'a' ,'t', 'a', 'y'] | slice : 2 : 5}} 
+<!-- g,a,t -->
+{{'Cagatay' | slice : 2 : 5}} 
+<!-- gat -->
+  
+---
+
+JsonPipe: Bir nesneyi JSON formatına dönüştürür.
+
+{{{name: 'cagatay', surname: 'demirtas'} | json}}
+//{ "name": "cagatay", "surname": "demirtas" }
+
+---
+
+UpperCasePipe-LowerCasePipe: Metinsel değerlerin tüm harflerini büyük-küçük hafe dönüştürür.
+
+{{'Cagatay Demirtas' | uppercase}} <br>
+{{'Cagatay Demirtas' | lowercase}} 
+
+CAGATAY DEMIRTAS
+cagatay demirtas
+
+---
+
+PercentPipe: Sayısal değerlerin yüzdelik olarak formatlanmasını sağlar.
+
+{{50 | percent}}
+
+---
+
+TitleCasePipe: Her kelimenin ilk harfini büyütür.
+
+{{'bankai senbonzakura kageyoshi' | titlecase}}
+Bankai Senbonzakura Kageyoshi
+
+---
+
+KeyValuePipe: Elimizdei bir key-value formatındaki verinin hem key hem de value'suna erişmemizi sağlar.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  
+  <ul>
+    <li *ngFor ="let name of names | keyvalue">
+      {{name.key}} - {{name.value}}
+    </li>
+  </ul>
+
+  `
+})
+export class AppComponent {
+  names: Map <number, string> = new Map ([[1, 'Ahmet'], [2, 'Cagatay'], [3, 'Demirtas']])
+}
+
+Liste halinde,
+
++1 - Ahmet
++2 - Cagatay
++3 - Demirtas 
+
+---
+
+Custom Pipe Nasıl Tanımlanır?
+
+terminal'de ng g p pipes/pipeName ya da ng generate pipe pipes/pipeName.
+
+ile app klasörünün içinde pipes'da oluştuğunu görürüz.
+
+Aynı şekilde app.module.ts içerisinde declare edildiğini görürüz. (ki edilmesi gereklidir.)
+
+...
+@NgModule({
+  declarations: [
+    AppComponent,
+    CustomPipe
+  ], ...
+--- 
+ 
+custom.pipe.ts içerisine bakarsak;
+
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({ //@Pipe decorator'u ile işaretlenmiş olduğundan bu yapının Pipe olduğunu anlıyoruz.
+  name: 'custom' //uygulama çapında kullanabilmek için bize bir name olarak custom verilir.
+})
+export class CustomPipe implements PipeTransform { //isim geleneği olarak CustomPipe.
+	//bir Pipe class'ının Pipe olabilmesi için PipeTransform interface'ini implement etmesi gereklidir.
+	
+	//Pipe'ın kullanıldığı değeri manipüle/transform etmemizi sağlayan fonksiyondur.
+  transform(value: unknown, ...args: unknown[]): unknown {
+    return null;
+  }
+
+}
+
+Custom oluşturduğumuz Pipe sadeece string veriler ile çalışsın, string değer döndürsün ve 2 adet number parametre alsın istersek;
+
+transform(value: string, a: number, b: number): string {
+    return null;
+  }
+  
+şeklinde düzenleyebiliriz.
+
+a'dan b'ye kadar slice eden bir pipe hazırlarsak;
+
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'custom'
+})
+export class CustomPipe implements PipeTransform {
+
+  transform(value: string, a: number, b: number): string { //parametreler mutlaka girilmelidir. opsiyonel yapmak için a?: number, b?: number yazabilirdik.
+    return value.slice(a, b)
+  }
+
+}
+
+bu pipe'ı kullanmak için;
+
+app.component.cs
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  
+  {{"bu ne dünya kardeşim seven sevene, bu dünya kardeşim böyle..." | custom : 10 : 20}}
+
+  `
+})
+export class AppComponent {
+  //...
+}
+
+şeklinde yazabiliriz.
+
+---
+
+Pipe'ların Service yahut Component'ler de Kullanımı
+
+- Pipe'lar da günün sonunda bir service'dir. Bir bu service'i sadece HTML'de view kısmında kullanmak yerine programatik olarak herhangi bir class'ta kullanmak ve o class'ın instance'ları üzerinden işlemler yapmak isteyebiliriz.
+
+ap.module.ts'da custom Pipe'ımızı providers'a ekleyelim. (ileri detaylı)
+providers: [CustomPipe],
+
+bu şekilde tanımlamada bulunduktan sonra istediğimiz componant'de ya da service'de bu Pipe'ı direkt bir class, instance, service olarak çağırıp kullanabiliriz.
+
+import { Component } from '@angular/core';
+import { CustomPipe } from './pipes/custom.pipe';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  
+  `
+})
+export class AppComponent {
+  constructor(private custom : CustomPipe) {
+    console.log(custom.transform("bu ne dünya kardeşim seven sevene, bu dünya kardeşim böyle...", 5, 10))
+  }
+}
+
+Console'da Inspect'e geldiğimizde ilgili işlemin yapıldığını görürüz.

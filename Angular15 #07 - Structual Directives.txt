@@ -1,0 +1,218 @@
+Structural Directive Nedir?
+
+- HTML nesnesini ve DOM yapısnı fiziksel olarak manipüle ederek sayfa üzerinde değişiklikler yapmamızı sağlayan directive türüdür.
+- Structural Directive'ler * karakterleriyle çağrılırlar.
+
+- Structural Directive'ler HTML şablonundaki DOM elemanlarının görünümünü fiziksel olarak değiştirerek template'in yapısını değiştirebilirler. Normal directive'ler ise HTML şablonundaki DOM elemanlarının görünümünü değiştirmez, sadece ekstra özellikler eklerler.
+
+Structural Directive'ler de TemplateRef ve ViewContainerRef olmak üzere iki modül ile karşılaşılmaktadır.
+
+TemplateRef: Directive'in kullanıldığı template'i temsil eder.
+ViewContainerRef: Angular'da bir template'in içeriğini içeren container'ın referansıdır. Bu container içerisinden dinamik olarak HTML elemanalrı eklemeye yahut çıkarmaya yarar. İleride component'in dinamik yüklenmesini sağladığını da göreceğiz.
+
+---
+
+Custom Structural Directive Oluşturma
+
+if, loop, each işlevselliklerine sahip custom structural directive'lerin nasıl oluşturabileceğini inceleyelim;
+
+->
+
+if Şartı için Custom Structural Directive
+
+Not: Structural Directive'ler kendi içerisinde setter property'ler üzerinden davranışlarını belirlerler.
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *appCustomif="true">Merhaba</div> //buradaki *appCustomif="true" true ya da false değeri parametre olarak gidecek,
+  ` ,
+})
+export class AppComponent { 
+    //...
+}
+
+customif.directive.ts;
+
+import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+
+@Directive({
+  selector: '[appCustomif]'
+})
+export class CustomifDirective {
+  //bu parametreleri çağırarak-inject ederek artık bu directive'in bir structural directive olduğunu belirttik.
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private viewContainerRef: ViewContainerRef
+  ) { }
+
+  //bu property'nin ismi selector'daki değerler birebir aynı olmak zorundadır.
+  @Input() set appCustomif(value: boolean) {
+    if(value) {
+      this.viewContainerRef.createEmbeddedView(this.templateRef) //true ise ilgili nesneyi container'a eklemek için gerekli işlem.
+    }else {
+      this.viewContainerRef.clear() //false ise de clear() ile ilgili div'i DOM nesnesinden kaldır.
+    }
+  }
+}
+
+Görüldüğü üzere ilgili DOM nesnesi üzeride fiziksel bir değişim yapıldı.
+
+->
+
+İterasyonel Davranış için Custom Structural Directive
+
+customfor.directive.ts;
+
+import { Directive, TemplateRef, ViewContainerRef, Input } from '@angular/core';
+
+@Directive({
+  selector: '[appCustomfor]'
+})
+export class CustomforDirective {
+
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private viewContainerRef: ViewContainerRef
+  ) { }
+
+  @Input() set appCustomfor(value: number) {
+    for(let i = 0; i < value; i++)
+      this.viewContainerRef.createEmbeddedView(this.templateRef)   
+  }
+}
+
+Ekrana 5 kere Cagatay yazdıracaktır.
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *appCustomif="false">Merhaba</div>
+  <ul>
+    <li *appCustomfor="5">Cagatay</li>
+  </ul>
+  ` 
+})
+export class AppComponent { 
+    title = 'lolo';
+}
+
+---
+
+Custom Structural Directive İçerisinden Değer Döndürme
+
+Liste halinde,
+Cagatay 0
+Cagatay 1
+Cagatay 2
+Cagatay 3
+Cagatay 4
+
+yazdırabilmek için;
+
+import { Directive, TemplateRef, ViewContainerRef, Input } from '@angular/core';
+
+@Directive({
+  selector: '[appCustomfor]'
+})
+export class CustomforDirective {
+
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private viewContainerRef: ViewContainerRef
+  ) { }
+
+  @Input() set appCustomfor(value: number) {
+    for(let i = 0; i < value; i++)
+      this.viewContainerRef.createEmbeddedView(this.templateRef, { //burada index: i belirtirsek,
+        index: i
+      })   
+  }
+}
+
+ve 
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *appCustomif="false">Merhaba</div>
+  <ul>
+    <li *appCustomfor="5; let x = index">Cagatay {{x}}</li>
+  </ul>
+  ` 
+})
+export class AppComponent { 
+    title = 'lolo';
+}
+
+Eğer ki directive'i kullanırken değerleri otomatik olarak karşılamak istersek $implicit operatörünü kullanabilirsiniz.
+
+@Input() set appCustomfor(value: number) {
+    for(let i = 0; i < value; i++)
+      this.viewContainerRef.createEmbeddedView(this.templateRef, {
+        $implicit: `${i}`
+      })   
+}
+  
+Görüldüğü üzere ekstradan index'i tanımlama derdinden kurtulduk.
+  
+<ul>
+    <li *appCustomfor="5; let i">Cagatay {{i}}</li>
+</ul>
+
+---
+
+Örnek:
+
+customfor.directive.ts;
+
+import { Directive, TemplateRef, ViewContainerRef, Input } from '@angular/core';
+
+@Directive({
+  selector: '[appCustomfor]'
+})
+export class CustomforDirective {
+
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private viewContainerRef: ViewContainerRef
+  ) { }
+
+  @Input() set appCustomfor(value: string[]) {
+    for(let i = 0; i < value.length; i++)
+      this.viewContainerRef.createEmbeddedView(this.templateRef, {
+        $implicit: value[i],
+        index: i
+      })   
+  }
+}
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *appCustomif="false">Merhaba</div>
+  <ul>
+    <li *appCustomfor="names; let name; let index = index">{{name}} - {{index}}</li>
+  </ul>
+  `
+})
+export class AppComponent {
+  title = 'lolo';
+  names: string[] = ["Jennefer", "Hüseyin", "Serena", "Faruk", "Teresa", "Rıfkı"]
+}
+
+ile Liste halinde yanında index numaraları ile implicit olarak array'deki isimleri ekrana yazdırdık.

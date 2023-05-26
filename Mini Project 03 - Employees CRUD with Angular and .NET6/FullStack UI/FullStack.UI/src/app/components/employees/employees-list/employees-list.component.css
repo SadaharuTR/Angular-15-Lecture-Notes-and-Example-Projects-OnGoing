@@ -1,0 +1,38 @@
+
+.bg-container {
+    /* The image used */
+      background: url('/assets/images/image2.jpg') no-repeat center center fixed;
+      color: aliceblue;
+      /* Full height */
+      width:100%;
+      height:100%;
+      margin: 0;
+      padding: 0;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
+    /* unvisited link */
+a:link {
+  color: white;
+  text-decoration:none
+}
+
+/* visited link */
+a:visited {
+  color: darkred;
+  text-decoration:none
+}
+
+/* mouse over link */
+a:hover {
+  color: gray;
+  text-decoration:none
+}
+
+/* selected link */
+a:active {
+  color: rgb(5, 5, 105);
+  text-decoration:none
+}

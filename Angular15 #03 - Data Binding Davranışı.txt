@@ -1,0 +1,335 @@
+Binding Nedir?
+
+- Angular'da Binding kavramı, Component Class'ında bulunan bir modelin veya fonksiyonun Template'dekji bir alan yahut DOM nesnesi ile canlı olarak bağlantı oluşturmasını ifade eden bir kavramdır.
+
+Bingind bağlantı yapısına göre;
+
+- Text Interpolations
+- Property Binding 
+- Event Binding
+- Two-Way Binding
+- Attribute Binding
+- Class Binding
+- Style Binding
+
+gibi şekillenmektedir.
+
+Text Interpolation: Template içerisinde, Component Class'ı içerisinde tanımlı olan bir field/property değerinin yazdırılması için kullanılan Binding yöntemidir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `<h1>Person</h1>
+  <p>{{name}}</p>` //metinsel olarak araya değer sokmamızı sağladı.
+  ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  name: string = 'proje1'; //name'in değeri değiştikçe yukarıda da değişmiş olacaktır. Binding kısmı burada geçerli.
+}
+
+- HTML kısmının içeriğini name field'ine Bind etmiş oluyoruz. Böylece 'name' üzerinde olabilecek tüm değişiklikler anlık olarak Template'deki ilgili alana yansıtılmış olacaktır.
+
+---
+
+Property Binding
+
+- Template içerisindekli HTML nesneleri veya directive'ler için Component Class'ında tanımlı olan verilerin property olarak direkt bağlanmasını sağlayan bir yöntemdir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `<h1>Person</h1>
+  <p>{{title}}</p>
+  <input type="text" [value]="title">
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title: string = 'proje1'; 
+}
+
+Bu sefer component class'taki title field'ını input'a value olarak bind ettik. Bunu yaparken de property binding'i kullanmış olduk.
+
+Örneği genişletelim,
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `<h1>Person</h1>
+  <p>{{title}}</p>
+  <input type="text" [value]="title">
+  <hr>
+  <img [src]="src" [width]="width"> //"src" ile "width" aşağıdaki değerleri gösterir.
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title: string = 'proje1'; 
+  src: string = "https://th.bing.com/th?id=ORMS.d29f39ee82c22df4c9a172ee75ea8315&pid=Wdp&w=300&h=156&qlt=90&c=1&rs=1&dpr=1.25&p=0"
+  width: number = 800
+}
+
+Bu yöntem sayesinde değer atamaları daha dinamik bir şekilde gerçekleştirilmiş oalcaktır.
+
+Ek olarak selector ile referans edilen component'lerin içerisindeki input property'lere de Property Binding üzerinden görseldeki gibi değer atanabilmektedir.
+
+home.component.ts dosyası;
+
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-home',
+  template:`<h1>{{title}}</h1>`, //ve burada ekranda görürüz.
+  styleUrls: ['./home.component.scss']
+})
+export class HomeComponent {
+  @Input() title: string = ""; //buradaki title: -> [title]'dan gelen değeri alır.
+}
+
+Burada Home Component'ini selector özelliği ile App Component'inin içerisinde,
+
+app.component.ts dosyası;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <app-home [title] ="name"></app-home> //şu şekilde property binding üzerinden çağırdığımızda,
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  name: string = 'Home Page'; // name field'ının değerini gönderebiliyoruz.
+}
+
+---
+
+Event Binding
+
+Template içerisindeki herhangi bir DOM nesnesinin Component Class'ı içerisinde tanımlı olan bir fonksiyona event olarak bağlanmasıdır.
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <button (click)="btnClick()">Click</button>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  btnClick() {
+    //..
+  }
+}
+
+Görüldüğü üzere Event Binding sürecinde DOM nesnesinde aksiyona göre tetiklenecek olay parantez içerisinde (event) şeklinde belirtilmektedir. Tabi burada isterseniz on-click şeklinde de olayı tanımlayabilirsiniz.
+
+<button on-click="btnClick()">Click</button>
+
+İstersek event'lere karşılık tanımlanan fonksiyonları noktalı virgülle ayırarak da kullanabiliriz. Bu işleme Multiple Event Handlers denmektedir.
+Mesela button'a tıklanıldığı zaman 2 fonksiyon da tetiklensin,
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <button on-click="btnClick(); btnClick2()">Click</button>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  btnClick() {
+    //..
+  }
+  btnClick2() {
+    //..
+  }
+}
+
+istebiliriz. Aynı şekilde (click)'de de geçerli.
+
+Ayrıca herhangi bir keyword event'i de istediğimiz bir HTML nesnesine bind edebiliriz.
+
+Klavyede Shift+a veya Shift+b ye basıldığında eventleri tetikle,
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <input (keydown.shift.a)="aEvent() value="Aaa">
+  <input (keydown.shift.b)="bEvent() value="Bbb">
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  aEvent() {
+    //..
+  }
+  bEvent() {
+    //..
+  }
+}
+
+---
+
+Two-Way Data Binding
+
+- Template içerisindeki bir HTML nesnesinin değeri değiştiğinde, o nesneyle bing edilmiş olan Component Class'ı içerisindeki field/property değerinin anlık olarak değiştirilmesini ve aynı zamanda tam tersi durumun da geçerli olmasını sağlayan yöntemdir.
+
+- HTML nesneleri ile Two_way Data Binding gerçekleştirebilmek için input nesnelerinde [(ngModel)] direktifi kullanılır.
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <input type="text" [(ngModel)] = "name">
+  <input type="text" [(ngModel)] = "name">
+  {{name}}
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title ='proje';
+  name: string = "";
+}
+
+Eğer ilk input değişirse ikinci input ile {{name}} da değişecektir. Çünkü Two Way Data Binding davranışı sayesinde HTML üzerinden text değiştiği anda yine bu text'e bağlı diğer görüntüler de eşzamanlı olarak güncellenecektir.
+
+[(ngModel)] direktifini kullanabilmek için uygulamanın ana modülünde 'FormsModule' ün import edilmiş olması gerekmektedir.
+
+app.module.ts'de;
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    Com1Component
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule //bunu ekliyoruz.
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Not: (Genel Kültür) ileride detaylı.
+Ayrıca [(ngModel)] direktifi ile bind edilmiş olan bir HTML nesnesinde verisel değişiklik olduğu taktirde ngModelChange event'i ile bir olayı tetikleyebilir ve böylece girilen bilgilerin de doğrulanması için çalışma gerçekleştirebiliriz.
+
+İlk input değiştirildikçe ekrana uyarı versin,
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <input type="text" [(ngModel)] = "name" (ngModelChange)="onChange($event)">
+  <input type="text" [(ngModel)] = "name">
+  {{name}}
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title ='proje';
+  name: string = "";
+  onChange($event){
+    alert("zortingen şıtrayze")
+  }
+}
+
+Not: (Aşırı Genel Kültür)
+HTML form elemanları için genel olarak kullanılan change event'i de mevcuttur. Bu event [(ngModel)] direktifi olmaksızın verisel değişikliklerde olay fırlatmak için kullanılabilir. Yani ngModelChange, [(ngModel)] direktifi ile birlikte kullanılırken; change event'i ise yalnız başına da kullanılabilir.
+
+---
+
+Attibute Binding
+
+- HTML elamanların attribute'ları için değerleri doğrudan Component Class'ından verilmesini sağlayan yöntemdir.
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <button [disabled]="disable">Send</button>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  disable: boolean = true;
+}
+
+ya da,
+
+import { Component} from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <table [border] = "border" [width]="width">
+    <tr>
+      <td [height] = "height">1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td [height] = "height" [attr.colspan] = "colspan">3</td>
+    </tr>
+  </table>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    colspan: number = 2;
+    border: string = "dashed";
+    width: number = 600;
+    height: number = 50;
+}
+
+---
+
+Style and Class Binding
+
+Bir HTML öğresine CSS ile style veya class bildirilerinde bulunmak için kullanılan yöntemdir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <table [style.background-color] = "bgColor" [border] = "border" [width]="width">
+    <tr>
+      <td [height] = "height">1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td [height] = "height" [attr.colspan] = "colspan">3</td>
+    </tr>
+  </table>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    bgColor: string = "red"
+    
+    colspan: number = 2;
+    border: string = "dashed";
+    width: number = 600;
+    height: number = 50;
+}
+
+---
+
+Change Detection Algoritması
+
+- Template'de bir event tetiklendiğinde yahut kullanıcı eylemi neticesinde bir modelin verisi değiştiğinde Component Class'ını bilgilendirmek ve Template ile senkronizasyonu sğalayabilmek için Change Detection Algoritması kullanılmaktadır.

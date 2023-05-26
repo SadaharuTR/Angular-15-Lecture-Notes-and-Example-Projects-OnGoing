@@ -1,0 +1,260 @@
+Angular'da Service Nedir? Ne Amaca Hizmet Etmektedir?
+
+- Angular mimarisinde(diğer mimarilerde de) service yapılanması belirli bir işlevi/operasyonu/sorumluluğu yerine getiren sınıfların ta kendisidir.
+
+Yani fiili bir işlem yürüten sınıfa service diyoruz.
+
+Bizler service yapılanmasını, genellikle component'lerki business logic sorumluluğunu üstlenmesi için kullanıyoruz.
+
+Yani bir component'deki gayemiz mümkün mertebe kullanıcı deneyimini sağlayabilecek şekilde davranış sergilemektir. Varsa bir iş/operasyon/business logic bunu servis tarafından gerçekleştiririz.
+
+- Servisin üstlendiği bu sorumluluğu, component'de servisi kullanarak yerine getirecektir. Böylece component'leri iş süreçlerinden arındırmış olacağız.
+
+Bir servisin genel manada kullanım alanları;
+
+- Fiiliyat gerçekleştirirken kullanılabilir.
+- Herhangi bir dış servisten yahut API'dan veri alabilir.
+- Uygulamanın genel state'ini tutabilir.
+- Component'ler arasında veri iletişimi sağlayabilir.
+
+---
+
+Service Nasıl Oluşturulur?
+
+- Angular'da bir servis oluşturabilmek için direkt aşağıdaki gibi bir class tasarımında bulunabiliriz.
+
+export class ProductService { //sonuna Service yazısı eklemek bir isimsel gelenektir.
+	get() {
+	//get product..
+	}
+	add (product: Product) {
+	//adding product
+	}
+	remove(id: number) {
+	//deleting product
+	}
+}
+
+Angular mimarisinde servisleri dependency injection mekanizması eşliğinde daha efektif kullanabilir ve yönetebiliriz. Bunun için ilgili sınıfın @Injectable decorator'ı ile işaretlenmiş olması gerekecektir.
+
+İsminde ..Service olmasa dahi @Injectable ile işaretlendiği için developer tarafından bunun bir servis olduğu belli olacaktır.
+
+Not: Bir servisin dependency injection ile kullanılbilmesi için @Injectable ile işaretlenmesinin nedenini önceki derste gördük.
+
+@Injectable({
+	providedIn: 'root'
+})
+
+export class ProductService { 
+	get() {
+	//get product..
+	}
+	add (product: Product) {
+	//adding product
+	}
+	remove(id: number) {
+	//deleting product
+	}
+}
+
+Böylece bir servisi yukarıdaki gibi rahatlıkla oluşturabiliriz.
+
+Bu şekilde manuel service oluşturabildiğimiz gibi,
+
+Ayrıca Angular CLI'dan da,
+
+ng g s/service services/product talimatı eşliğinde hazır bir servis talebinde bulunabiliriz.
+
+Bu talimatın sonunda ilgili dizinde;
+
+@Injectable({
+	providedIn: 'root'
+})
+
+export class ProductService { 
+	constructor() { }
+}
+
+ProductService isminde bir servis oluşturacaktır. Görüldüğü üzere direkt olarak @Injectable ile işaretlemekte ve sonuna Service yazısını eklemektedir. Sonrası size kalmış.
+
+Studio Code'a geçelim.
+
+app -> services klasörünü oluşturalım.
+
+Manuel olarak personel.service.ts oluşturalım;
+
+import { Injectable } from "@angular/core";
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class PersonelService {
+    add() {
+
+    }
+    remove() {
+
+    }
+    get() {
+        
+    }
+}
+
+Bir adet Product servisini de CLI ile oluşturalım.
+
+ng g service services/product ile;
+
+product.service.ts oluşturuldu.
+
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProductService {
+
+  constructor() { }
+}
+
+istediğimiz gibi içini doldurup kullanabiliriz.
+
+Not: Servisler kendi bünyelerinde de birbirlerini inject edebilirler. Yani bir servis başka bir servisi de kullanabilir.
+
+---
+
+Service Üzerinden Component Communication
+
+- Servislerin genellikle bir işleme özel fiili sorumluluğun üstlenmesinin dışında birden fazla compont arasında iletişimin sağlanması gerektiği senaryolarda da kullanıldığını görürüz.
+
+Örneklendirelim;
+
+Create ve Read işlemlerini yapan iki component'imiz olsun.
+
+ng g c components/createUser
+ng g c components/readUser
+
+ile create-user.component.ts ile read-user.component.ts dosyalarını oluşturalım.
+
+FormsModule'ü app.module.ts'e import edelim.
+
+import { Component } from '@angular/core';
+
+create-user.component.ts;
+
+@Component({
+  selector: 'app-create-user',
+  template: `
+    <input type="text" placeholder="Name"> <button>Create</button>
+  `,
+})
+export class CreateUserComponent {
+
+}
+
+ve read-user.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-read-user',
+  template: `
+  <ul>
+    <li>...</li>
+  </ul>
+  `,
+})
+export class ReadUserComponent {
+
+}
+
+Şimdi bu ikisi arasındaki iletişimi  yani Create edildikte li'lere eklenme işlemini sağlayacak bir servis oluşturalım. (ngRX küyüphanesi ile de yapılabilir ama o ileride)
+
+ng g service services/user ile,
+
+user.service.ts dosyasını oluşturalım.
+
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+
+  addUser(name: string) {
+    this.names.push(name)
+  }
+
+  get users(): string[] { //names field'ını döndüren bir users property'si tanımlayalım.
+    return this.names;
+  }
+
+  //CreateUserComponent'de girilen name değerlerini tutabilmek için bir koleksiyonel yapı tanımlayalım.
+  private names: string[] = [];; //herkes erişemesin, sadece veri ekleyecek olan addUser() erişsin.
+}
+
+bir işlevi yerin getirsin diye bir servis oluşturduk.
+
+Kullanmak için;
+
+create-user.component.ts'de;
+Butona tıklanıldığı zaman ilgil servisin addUser() fonksiyonunu kullanarak değer eklesin,
+
+import { Component } from '@angular/core';
+import { UserService } from 'src/app/services/user.service';
+
+@Component({
+  selector: 'app-create-user',
+  template: `
+    <input type="text" placeholder="Name" #txtName> <button (click)="userCreate(txtName.value)">Create</button>
+  `,
+})
+export class CreateUserComponent {
+  constructor(private userService: UserService){ }
+
+  userCreate(name: string){
+    this.userService.addUser(name)
+  }
+}
+
+Aynı şekilde read-user.component.ts'de de users property'si üzerinden koleksiyondaki değerleri okuyup 
+yansıtalım.
+
+import { Component } from '@angular/core';
+import { UserService } from 'src/app/services/user.service';
+
+@Component({
+  selector: 'app-read-user',
+  template: `
+  <ul>
+    <li *ngFor="let name of userService.users">{{name}}</li>
+  </ul>
+  `,
+})
+export class ReadUserComponent {
+  constructor(public userService:UserService){ }
+
+}
+
+son olarak app.component.ts'de 
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `S
+  <app-create-user></app-create-user>
+  <hr>
+  <app-read-user></app-read-user>S
+  `,
+})
+export class AppComponent {
+  title = 'services_Example';
+}
+
+ikisini referans edelim.
+
+ng serve ile ekranda değerler ekelyip create butonuna basarsak listeye eklendiğini görürüz.
+
+Böylece iki component arasında servis ile iletişimi sağlamış olduk.
+

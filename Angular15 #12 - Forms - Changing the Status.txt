@@ -1,0 +1,176 @@
+Changing the Status Nedir?
+
+- Angular'daki Form yapılanmasının state'ini programatik olarak değiştirmemizi sağlayan fonksiyonlar bütünüdür.
+- Bu fonksiyonlar aracılığıyla, bir formun ve formdaki kontrolün durumunu programatik olarak yahut kullanıcı arayüzü aracılığıyla değiştirebilir ve genel anlamda durumu güncelleyebiliriz.
+
+markAsTouched: Bu fonksiyon ile herhangi bir form'da yahut o form içerisindeki herhangi bir kontrolde işlem yapılırsa formun ve ilgili kontrolün 'touched' özelliği true olarak değişecektir. Yani ilgili forma ya da form kontrole dokunulduğu programatik olarak ifade edilmiş olacaktır.
+
+this.frm.get("name").markAsTouched(); //form touched: true
+this.frm.markAsTouched(); //'name' control touched: true
+
+Eğer ki bu fonksiyonda 'onlySelf' parametresine true değerini verirsek hangi yapıda kullanılıyorsa sadece o yapının 'touched' özelliğini etkileyecektir.
+
+this.frm.get("name").markAsTouched({ onlySelf: true })
+//form touched: false
+//'name' control touched: true
+
+Esasında bu onlySelf parametresini tüm fonksiyonlar için genelleyebilirsiniz. Aynı davranışı sergileyecektir.
+
+---
+
+markAsAllTouched: Bu fonksiyonda markAsTouched fonksiyonunda odluğu gibi kontrolün ve o kontrolün altındaki tüm kontrollerin touched özelliğinin değerini true olarak değiştirecektir.
+
+this.frm.get("address").markAsTouched()
+//form touched: true
+//'address' control touched: true
+//'country' control touched: false
+
+Bu şekilde address form kontrolüne markAsTouched fonksiyonu ile müdahele edecek olursak sadece address kontrolü ile form bundan etkilenecektir.
+
+this.frm.get("address").markAsAllTouched()
+//form touched: false
+//'address' control touched: true
+//'country' control touched: true
+
+markAsAllTouched fonksiyonu ile müdahele edersek eğer hem address form kontrolü hem de altındaki kontroller etkilenecek lakin form etkilenmeyecektir.
+
+---
+
+markAsUnTouched: Bu fonksiyon ile tetiklenen form yahut form kontrolünün touched özelliği false olarak ayarlanacaktır. İlgili yapının dokunulmadığına dair programatik dokunuşlar yapılırken tercih edilmektedir.
+
+this.frm.get("name").markAsUnTouched()
+//form touched: true
+//'name' control touched: false
+
+Görüldüğü üzere ilgili fonksiyon form kontrolü seviyesinde kullanılıyorsa eğer ilgili kontrolün touched özelliğini false yapacak lakin form'unki true olarak kalacaktır.
+
+this.frm.markAsUnTouched();
+//form touched: false
+//'name' control touched: false
+
+Aynı şekilde form üzerinde bu fonksiyon tetiklenirse hem form hem de form içerisindeki tüm kontroller bu fonksiyondan etkilenecektir.
+
+---
+
+markAsDirty: Bu fonksiyon ile ilgili formun yahut form kontrolünün 'dirty' değeri programatik olarak değiştirilebilmektedir. dirty forma bir şeyler yazıldığını söyler.
+
+this.frm.markAsDirty();
+this.frm.get("name").markAsDirty();
+//form dirty: true
+//'name' control dirty: true
+
+---
+
+markAsPristine: Bu fonksiyon ile ilgili formun yahut form kontrolünün 'pristine' değerini true olarak değiştirmemiz sağlanır. Böylece sanki ilgili forma hiç dokunulmamış yani formda bir çalışma yapılmamış mahiyeyinde bir çalışma gerçekleştirilebilir.
+
+this.frm.get("name").markAsPristine();
+this.frm.markAsPristine();
+//form pristine: true
+//'name' control pristine: true
+
+---
+
+disable ve enable: disable, kullanıldığı form'un veya form kontrolün devre dışı kalmasını sağlar.
+enable ile aktifleştirilmesini sağlar.
+
+Uygulama kodları:
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <form [formGroup]="frm" (ngSubmit)="onSubmit()"> 
+    <input type="text" placeholder="Name" formControlName="name"> <br>
+    <input type="text" placeholder="Surname" formControlName="surname"> <br>
+    <input type="text" placeholder="Email" formControlName="email"> <br>
+    <input type="text" placeholder="Tel" formControlName="tel"> <br> <br>
+    <div formGroupName="address">
+      <input type="text" placeholder="Country" formControlName="country"> <br>
+      <input type="text" placeholder="City" formControlName="city"> <br>
+      <input type="text" placeholder="Address" formControlName="address">
+    </div>
+    <button>Send</button>
+  </form>
+
+  <button (click)="markAsTouchedFunc()">markAsTouched</button> <br>
+  <button (click)="markAllAsTouchedFunc()">markAllAsTouched</button> <br>
+  <button (click)="markAsUntouchedFunc()">markAsUntouched</button> <br>
+  <button (click)="markAsDirtyFunc()">markAsDirty</button> <br>
+  <button (click)="markAsPristineFunc()">markAsPristine</button> <br>
+  <button (click)="disableFunc()">disable</button> <br>
+  <button (click)="enableFunc()">enable</button> <br>
+
+  form touched: {{frm.touched}} <br>
+  'name' form control touched : {{frm.get("name").touched}} <br>
+  'address' form control touched : {{frm.get("address").touched}} <br>
+  'country' form control touched : {{frm.get("address").get("country").touched}}
+  <hr>
+  form dirty: {{frm.dirty}} <br>
+  'name' form control dirty : {{frm.get("name").dirty}}
+  <hr>
+  form pristine: {{frm.pristine}} <br>
+  'name' form control pristine : {{frm.get("name").pristine}}
+  <hr>
+  `,
+})
+export class AppComponent {
+
+  frm: FormGroup;
+  constructor(private formBuilder: FormBuilder){
+    this.frm = formBuilder.group({
+      name:["", Validators.required],
+      surname:[""],
+      email:[""],
+      tel: [""],
+      address: formBuilder.group({
+        country: [""],
+        city: [""],
+        address: [""]
+      })
+    })
+
+  this.frm.valueChanges.subscribe({
+    next: data => {
+      console.log(data);
+    }
+  })
+
+  this.frm.statusChanges.subscribe({
+    next: data => {
+      console.log(data);
+    }
+  })
+  }
+
+  onSubmit(){
+    console.log(this.frm.value)
+  }
+
+  markAsTouchedFunc() {
+    //this.frm.markAsTouched()
+    //this.frm.get("name").markAsTouched()
+    this.frm.get("name").markAsTouched({onlySelf: true})
+  }
+  markAllAsTouchedFunc() {
+    //this.frm.markAllAsTouched();
+    this.frm.get("address").markAllAsTouched();
+  }
+  markAsUntouchedFunc() {
+    this.frm.markAsUntouched();
+  }
+  markAsDirtyFunc() {
+    this.frm.markAsDirty();
+  }
+  markAsPristineFunc(){
+    this.frm.markAsPristine();
+  }
+  disableFunc() {
+    this.frm.get("name").disable()
+  }
+  enableFunc() {
+    this.frm.get("name").enable()
+  }
+
+}

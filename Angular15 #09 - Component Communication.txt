@@ -1,0 +1,261 @@
+Component Communication Nedir?
+
+- Angular component'leri arasında veri ve olayları paylaşma süreçlerini ifade eden bir kavramdır.
+- Şİmdilik, Parent to Child ve Child to Parent Communication olmak üzere 2 yöntem incelenecektir.
+
+Parent to Child Communication : Parent component'ten child component'e veri göndermek için kullanılan yöntemdir. Parent --Input--> Child
+Child to Parent Communication : Child component'ten Parent component'e veri göndermek için kullanılan yöntemdir. Child --Output--> Parent
+
+Parent to Child Communication
+
+parent ve child olmak üzere 2 adet component oluşturalım.
+
+Child'ın selector'unu alıp Parent'ın html'inde,
+
+<p>parent works!</p>
+<app-child></app-child>
+olarak ekleyelim.
+
+Daha sonra Parent'ın selector'unu da ana component'in html'inde,
+
+<app-parent></app-parent> yazarsak,
+
+yaptığımız çalışmanın etkisini,
+
+parent works!
+
+child works!
+
+olarak görürüz.
+
+Burada basit olarak parent component'inin içerisinde child component'ini çağırdık.
+
+Örneği geliştirirsek; (bu örnek için parent ve child templateUrl'leri template'e taşıdık ve ekstra dosyaları sildik.)
+
+parent.component.ts'de bulunan,
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent',
+  template: `
+
+  <p>parent works!</p>
+  <app-child></app-child>
+
+  `
+})
+export class ParentComponent { //bu değeri parent component ile ilişkili olan child component'e nasıl göndeririz?
+  data: any = "Merhaba"
+}
+
+Tek yapmamız gereken işlem child component'de parent'dan gönderilecek veriyi input olarak karşılayacak bir değişken tanımlamak.
+
+child.component.ts
+
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-child',
+  template: `
+	<div style="background-color: aquamarine;">
+		<p>child works!</p>
+		{{childData}}  // ve burada ekranda gösterilecektir.
+	</div>
+  `
+})
+export class ChildComponent {
+  @Input() childData: any; // artık parent'dan gönderilen veri burada karşılanacaktır.
+}
+
+Tekrardan parent'a gidip,
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent',
+  template: `
+
+  <p>parent works!</p>
+  <app-child childData="yakala beni"></app-child> //yakala beni'yi data'ya gönderirsek.
+
+  `
+})
+export class ParentComponent {
+  data: any = "Merhaba"
+}
+
+Data'yı değişken olarak göndererek kullanmak istersek de;
+
+parent.ts'da
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent',
+  template: `
+
+  <p>parent works!</p>
+  <app-child [childData]="data"></app-child>
+
+  `
+})
+export class ParentComponent {
+  data: any = "Merhaba"
+}
+
+yazmamız yeterli.
+
+---
+
+Child to Parent Communication
+
+- Öncelikle farklı dizinlerde de olsa aynı isimlerle parent ve child component'leri oluşturduğumuz için app.module.ts'da şu değişiklikleri yapalım. 
+(ya da direkt farklı adlarla oluşturun.)
+
+import { ParentComponent } from './components/parent_to_child_communication/parent/parent.component';
+import { ChildComponent } from './components/parent_to_child_communication/child/child.component';
+import { ParentComponent as ParentComponent2} from './components/child_to_parent_communication/parent/parent.component';
+import { ChildComponent as ChildComponent2} from './components/child_to_parent_communication/child/child.component';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    ParentComponent,
+    ChildComponent,
+    ParentComponent2,
+    ChildComponent2
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    CommonModule,
+    ReactiveFormsModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Kodumuza dönecek olursak;
+
+Child'dan Parent'a veri gönderebilmek için Event kullanmamız gereklidir.
+
+child.component.ts
+
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+
+@Component({
+  selector: 'app-child2',
+  template: `
+  <p>Child Component</p>
+  `
+})
+export class ChildComponent implements OnInit { // değeri event'ten gönderebilmek için event'i tetikleyecek bir event'e ihtiyaç var.
+  ngOnInit(): void { //yani bu event'i emit-yayınlayacak bir olaya ihtiyacımız var. Bunun için OnInit interface'i ve ngOnInit fonksiyonunu kullanırız.
+    this.dataEvent.emit({message: "Merhaba Televole"}) // message field'ının değeri Merhaba Televole olan bir object gönderelim.
+  }
+  @Output() dataEvent : EventEmitter<any> = new EventEmitter(); 
+  //fırlatacağımız verinin event'i. Türü EventEmitter olmalıdır. Dışarıdan erişilebilir olması için @Output() olması lazım.
+  //Child'dan Parent'a değer gönderebilmek için o değerin event'ini oluşturmak zorundayız. (ileride belki başka yolu da vardır.)
+}
+
+ve dataEvent event'ini oluşturduk. dataEvent bir fonksiyon bağlayabileceğimiz bir event'dir.
+Parent'ın bu child'dan gelen veriyi yakayalabilmesi için;
+
+parent.component.ts
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent2',
+  template: ` 
+  <p>Parent Component</p>
+  <app-child2 (dataEvent)="childEvent($event)"></app-child2> //gönderilen veri burada yakalanacak.
+  `
+})
+export class ParentComponent {
+  childEvent(obj: any){ // bağlanacak fonksiyon. gelecek olan değeri parametre olarak yakalamak için obj: any oluşturduk.
+    console.log(obj)
+  }
+}
+
+yaptığımız tüm işlemleri görebilmek için,
+
+app.component.html'de
+
+<app-parent></app-parent>
+
+<hr>
+
+<app-parent2></app-parent2>
+
+yazalım.
+
+----
+
+Child to Child Communication
+
+- Bir child'dan parent'a, sonra parent'dan da diğer child'a data'yı göndermek gerekmektedir.
+
+childa2.component.ts;
+
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+
+@Component({
+  selector: 'app-childa2',
+  template: `
+  <p>Child A 2 Component</p>
+  `
+})
+export class Childa2Component implements OnInit {
+  ngOnInit(): void {
+    this.data.emit("Child A 2'den gelen veri.")
+  }
+  @Output() data : EventEmitter<any> = new EventEmitter()
+}
+
+parent3.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-parent3',
+  template: `
+ 
+  <div style="background-color: chocolate;">
+    <p>Parent3 Component</p>
+
+    <app-childa2 (data)="childData($event)"></app-childa2>
+    <app-childb2 [data]="childa2Message"></app-childb2>
+  </div>
+  
+  `,
+})
+export class Parent3Component {
+  childa2Message : string;
+  childData(message: string){
+    this.childa2Message = message;
+  }
+}
+
+childb2.component.ts;
+
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-childb2',
+  template: `
+  <p>Child B 2 Component< --- {{data}}</p>
+  `,
+
+})
+export class Childb2Component {
+  @Input() data: string;
+}
+
+Sonuç olarak;
+
+Parent Component'dan Child Component'a Attibute veya Metot'lar ile,
+Child'dan Parent'a Event'ler ile veri gönderimini gerçekleştiriyoruz.

@@ -1,0 +1,1067 @@
+Dependency Injection Nedir?
+
+- Dependency Injection, yapmış olduğumuz kodsal çalışmalarda yeniden kullanılabilir bir davranış sergilememizi sağlayan çağdaş bir design pattern'dir.
+
+- Dependency Injection'ı anlayabilmek için dependency kavramını anlamak gerekmektedir.
+
+Dependency: Bir yazılım parçasının(class, metot vs.) başka bir bileşene ihtiyaç duyması durumunu ifade etmektedir.
+
+Misal olarak bir e-ticaret mimarisinde siparişleri işleyen sınıf, müşteri, ürün ve ödeme gibi diğer bilgilere ihtiyaç duyacağı için bu bilgileri sağlayan sınıflara bağımlılık gösterecektir.
+
+İşte Dependency Injection'ın temel gayesi, bu dependency'leri mümkün mertebe yönetilebilir bir hale getirmek ve kodsal değişiklik süreçlerinde bağımlılığın getisi olan olası dirençler neticesinde olabilecek hatalara karşın önlem alabilmektir. Yani örnekteki siparişleri işleyen sınıfın, diğer sınıflarda olacak değişikliklerden mümkün mertebe etkilenmesini engellemektir.
+
+Nasıl Uygulanır?
+
+- Angular mimarisinin temelinde dahili olarak gelmektedir.
+
+Dependency Injection olmadan;
+
+@Component({
+	selector: 'app-root',
+	template:``
+})
+//AppComponent içerisinde ProductService isimli sınıf direkt kullanılmaktadır.
+//Bu durumda AppComponent sınıfı ProductService'e sıkı(tight coupling) bağlı olarak //nitelendirilmektedir
+export class AppComponent implements OnInit{
+	productService: ProductService;
+	constructor(){
+		this.productService = new ProductService();
+	}
+
+ngOnInıt():void {
+	const products: Product[] = this.productService.getProducts();
+	console.log(products)
+	}
+}
+
+export class ProductService {
+	getProducts(): Product[] {
+		const products: Product[] = [
+			new Product(1, "Kalem", 1000),
+			new Product(1, "Kalem", 1000),
+			new Product(1, "Kalem", 1000)
+			]
+			return products;
+	}
+}
+
+export class Product {
+	constructor(private id: number, private name: string, private quantity: number) { }
+}		
+
+Diyelim ki ProductService ile yapılan çalışma değişti ve constructor'dan parametre alma kararı verdik.
+Bu durumda ProductService class'ında parametreyi aldığı an yukarıda new kısmında hata verecektir.
+
+Bu durum birçok soruna sebep olabilmektedir.
+
+Bu şekilde bir kullanım neticesinde, ProductService nesnesine her ihtiyacımız olan noktada bir instance üretmekle uğraşmak zorunda kalınmaktadır. Halbuki bizler bu nesnenin singleton olarak kullanılmasını isteyebiliriz.
+
+İşte bu durumda bizler bu çalışmayı dependency injection kullanarak aşağıdaki gibi gerçekleştirebilir ve bu tasarımın getisi olan türlü faydalı davranışlardan istifade edebiliriz.
+
+export class AppComponent implements OnInit{
+	
+	constructor(private productService: ProductService){
+		this.productService = new ProductService();
+	}
+
+ngOnInıt():void {
+	const products: Product[] = this.productService.getProducts();
+	console.log(products)
+	}
+}
+
+Burada AppComponent tarafından ihtiyaç duyulan sınıfı constructor üzerinden IoC Container'ından talep etmiş oluyoruz. Bu talebi gerçekleştirebilmek için ProductService'in bu çalışmanın yapıldığı module'ün
+'Providers' alanına aşağıdaki gibi eklenmesi gerekmektedir.
+
+@NgModule({..
+..
+imports: [
+...
+],
+providers: [ProductService],
+bootstrap: [AppComponent]
+}]
+export class AppModule { }
+
+Yani Angular mimarisindeki IoC Container'a denk gelen kısım modüllerdeki ya da componentlerdeki providers kısmıdır.
+
+Bu şekilde çalışmanın faydaları;
+
+- Artık AppComponent, ProductService'in nasıl üretildiğiyle ilgilenmediği için loose coupling(gevşek bağlılık) sağlanmaktadır.
+
+- Test edilebilirliği daha kolaydır.
+
+---
+
+Angular'da Dependency Injection Aktörleri
+
+Angular'da Dependency Injection için 5 aktör mevcuttur.
+
+-Consumer: Bağımlılığa ihtiyaç duyan sınıftır.(Component, directive, service...vs.)
+-Dependency: Consumer'da olması istenen sınıftır.
+-Injection Token(DI Token): Dependency'leri Unique bir şekilde tanımlayan değerdir.
+-Provider: Injection Token eşliğinde, dependency'lerin tutulduğu yerdir.
+-Injector: Dependency'leri ihtiyaç noktalarında inject etmemizi sağlayan yapılardır. Inject sürecinde DI Token'ı kullanırlar.
+
+---
+
+Dependency Injection Kullanımı
+
+- Dependency Injection'ı kullanabilmek için yapılması gereken husus dependency olan sınıfı uygulamanın provider'ına eklemek ve gerektiği noktada çağırmaktır.
+
+Eğer ki bir sınıfı component'in @Component decorator'u üzerinden provider'ına eklersek o sınıfa sadece o component üzerinden erişilebilir. İlgili component'İn bulunduğu modül üzerinden provide edersek o modulde declare edilmiş diğer component ve direktifler tarafından da ilgili servisin Dependency Injection ile kullanılabileceği anlamına gelir.
+
+Studio Code'da;
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { ProductService } from './productservice';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [ProductService],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+ile providers'a ekleyelim.
+
+productservice.ts;
+
+export class ProductService{
+    getProducts(): Product[]{
+        return [
+            { name: "Keyboard", quantity: 10 },
+            { name: "Mouse", quantity: 20 },
+            { name: "MousePad", quantity: 5 }
+        ]
+    }
+}
+
+export class Product{
+    name: string
+    quantity: number
+}
+
+Sonra app.component.ts'de;
+
+import { Component } from '@angular/core';
+import { ProductService } from './productservice';
+
+@Component({
+  selector: 'app-root',
+  template: `zort`,
+})
+export class AppComponent {
+
+  constructor(private productService: ProductService) {
+    console.log(productService.getProducts())
+  }
+}
+
+Burada ilgili sınıf provider'dan çağırılırken DI Token olarak sınıfın referansını kullanıyoruz. Provider'da bu referansa karşılık gelen hangi sınıf varsa onun instance'ı döndürülmektedir.
+(ileride detaylı)
+
+Bir sınıfı provider'a eklemeksizin direkt olarak inject etmek istiyorsak eğer sınıfı @Injectable decorator'u ile işaretleyerek aşağıdaki gibi 'providedIn' özelliğine 'root' değerini verebilirsiniz.
+
+productservice.ts'de;
+
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: "root"
+})
+
+export class ProductService{
+    getProducts(): Product[]{
+        return [
+            { name: "Keyboard", quantity: 10 },
+            { name: "Mouse", quantity: 20 },
+            { name: "MousePad", quantity: 5 }
+        ]
+    }
+}
+
+export class Product{
+    name: string
+    quantity: number
+}
+
+Böylece ilgili sınıfı provider'a eklemeksizin uygulamanın herhangi bir noktasındaki sınıf tarafından inject edebilir ve kullanabiliriz.
+
+Burada şimdilik @Injectable decarator'u ile yaptığımız bu provideIn konfigürasyonu uygulama kapsamlıyken, modüler olarak 'provide' edilmiş olan yapılandırmalar ise ilgili modül kapsamındadır.
+
+Tüm bunlar dışında component seviyesinde provide edilmiş olan dependency'ler kullanabiliriz.
+
+import { Component } from '@angular/core';
+import { ProductService } from './productservice';
+
+@Component({
+  selector: 'app-root',
+  template: `zort`,
+  providers: [ProductService]
+})
+export class AppComponent {
+
+  constructor(private productService: ProductService) {
+    console.log(productService.getProducts())
+  }
+}
+
+bu durumda da ilgili sınıflara sadece o component üzerinden erişebiliriz.
+
+-------------------------------------------------------------
+
+Injector
+
+- Injectori dependency'leri somutlaştıran ve onları ihtiyaç noktalarına enjekte(inject) etmekten sorumlu olan yapılardır.
+
+- Injector'lar provider'da DI Token değerleri ile ilişkilendirilmiş vaziyette depolanan dependency instance'larını DI Tokenları kullanarak aramamızı ve elde etmemizi sağlarlar.
+
+- Angular, uygulama tarayıcıya yüklendiği taktirde modüller ve componentler/directive'ler için olmak üzere iki injector ağacı oluşturmaktadır.
+
+Module Injector Tree : 
+
+- Modül seviyesinde provide privde edilecek servisler için oluşturulan injector ağacıdır.
+- Modül seviyesinde @NgModule ve @Injectable dekoratörleri aracılığıyla iki farklı şekilde servisleri provide edebiliriz.
+
+Modül ağacının hiyerarşisi;
+
+Null Injector -> Platform Module -> Root Module -> Lazy Module A
+											    -> Lazy Module B
+												
+RootModule içerisinde; hem ana hem de uygulamadaki tüm modüllerin provide'larını ve provideIn özelliği root olarak yapılandırılmış servisleri içerir. Ayrıyeten Injectable decoratoru ile provide edilmiş bir servisi de burada görürüz.
+
+Element Injector Tree :
+
+Component ve directive'ler seviyesinde provide edilecek servisler için oluşturulan injector ağacıdır.
+
+Element ağacının hiyerarşisi;
+
+Root Component -> ParentComponentA -> ChildComponentA
+
+			   -> ParentComponentB -> ChildComponentB
+								   -> ChildComponentC
+								   
+hangi component olursa olsun child ya da parent (directive'ler için de geçerli) provide edilen servis direkt root component'e eklenmiş olacaktır.
+
+---
+
+Servislerin Provider'a Eklenmesi
+
+- Angular'da servislerin(yani sınıf instance'larının/dependency'lerin)dependency injection mekanizması ile component ve directive'ler de çağırılabilmesi için öncelikle provider'lara eklenmesi gerekmektedir.
+
+- Bunun için ilgili servise hangi component ve directive'den ihtiyaç olacaksa onun bulunduğu modul'ün provider'ına aşağıdaki gibi eklenmesi gerekmektedir.
+
+@NgModule(
+	declarations:..
+	imports:...
+	providers: [ProductService],
+	bootstrap:...
+export class AppModule{}
+
+Dependency'nin kaydedildiği yer bağımlılığın erişim kapsamını tanımlar. Misal olarak AppModule'de provide ediliyorsa eğer bu bağımlılığa uygulamanın herhangi bir noktasından erişilebileceği anlamına gelir.
+
+@Component({
+	selector:..
+	template:...
+	providers: [ProductService]
+)}
+export class AppComponent....
+
+Yok eğer ilgili servis yukarıdaki gibi herhangi bir component seviyesinde provide edililiyorsa eğer o component'in alt component'lerinden herhangi biri tarafından erişilebilir olacaktır.
+
+---
+
+@Injectable Decorator
+
+- Angular'da bir sınıfın servis olarak kullanılacağını ifade etmek için @Injectable decorator'u kullanılmaktadır.
+
+Bu decorator ile işaretlenmiş olan sınıfların diğer sınıflara olan bağımlılıklarını yönetebiliriz.
+
+productservice.ts'e bakalım;
+
+export class ProductService{
+    constructor(private loggerService: LoggerService){
+
+    }
+    getProducts(): Product[]{
+        return [
+            { name: "Keyboard", quantity: 10 },
+            { name: "Mouse", quantity: 20 },
+            { name: "MousePad", quantity: 5 }
+        ]
+    }
+}
+
+export class Product{
+    name: string
+    quantity: number
+}
+
+export class LoggerService {
+    log(){
+        console.log("loggggggiiiiiinnngggg......")
+    }
+}
+
+burada ProductService constructor'ında LoggerService sınıfını çağırmaktadır. Bu davranışı bu şartlarda gerçekleştirdiğimiz taktirde 'ProductService'i herhangi bir noktada provide ederken şöyle bir hatayla karşılaşılacaktır. (burada app.component.ts'de)
+
+The class 'ProductService' cannot be created via dependency injection, as it does not have an Angular decorator. This will result in an error at runtime.
+
+Görüldüğü üzere burada 'ProductService' sınıfının  dependency injection ile oluşturulamayacağını ifade etmektedir. Çünkü bu nesneyi oluşturabilmek için bir 'LoggerService' sınıfına ihtiyaç olacaktır.
+
+İşte bu durumda 'ProductService'i @Injectable ile işaretleyerek bu sınıfın constructor'unda inject edilen servisleri veya diğer bağımlılıkları kullanarak bir instance'ının oluşturulmasını sağlayabiliriz.
+
+Tekrardan productservice.ts;
+
+import { Injectable } from "@angular/core"
+
+@Injectable()
+export class ProductService{
+    constructor(private loggerService: LoggerService){
+
+    }
+    getProducts(): Product[]{
+        return [
+            { name: "Keyboard", quantity: 10 },
+            { name: "Mouse", quantity: 20 },
+            { name: "MousePad", quantity: 5 }
+        ]
+    }
+}
+
+export class Product{
+    name: string
+    quantity: number
+}
+
+export class LoggerService {
+    log(){
+        console.log("loggggggiiiiiinnngggg......")
+    }
+}
+
+'da @Injectable() ile ProductService'in constructor'unda herhangi bir instance ihtiyacı varsa bunu Dependency Injection ile bana gönder demiş olduk. Yani ProductService'i bağımlılıkları ile gönder demiş olduk.
+
+Fakat artık bu servisi kullanmaya çalışırsak bu seferde ROR NullInjectorError: R3...
+hatası alırız. Çünkü elimizde LoggerService yok.
+
+Constructor'unda dependency'si olan herhangi bir sınıfı provide edeceksek öncelikle bu sınıfı injectable işaretliyoruz.
+
+Sonra bu sınıfın dependency göstermiş olduğu sınıfı da provers'a eklemek gereklidir.
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { LoggerService, ProductService } from './productservice';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [ProductService, LoggerService],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Böylece @Injectable sayesinde 'ProductService'i her ne kadar constructor'ından parametre alıyor olsa da rahatlıkla provide edebiliriz.
+
+Tabi 'ProductService'i artık dependency injection ile elde ettiğinizde 'LoggerService'inde bir instance'ının olmasını istiyorsanız onu da privde etmeyi unutmamalısınız.
+
+Aksi taktirde 'ProductService' instance'ının üretildiğini ama 'LoggerService' parametresinin null geldiğini görürsünüz.
+
+Ayrıca @Injectable decorator'u bir sınıfın bir servis olarak kullanılacağını ifade etmesinden dolayı  kodu daha okunaklı hale getirmekte ve geliştiriciler açısından bu kodun kullanım amacını hızlıca anlamasına yardımcı olmaktadır.
+
+Ve tüm bunların dışında bu decorator sayesinde uygulama ayağa kaldırıldığı an yalnızca kullanılacak servisleri yükleyecektir. Böylece uygulama performansına da olumlu katkı sunmaktadır.
+
+---
+
+@Injectable providedIn Parametresi
+
+- @Injectable decoratoru ile bir sınıfı servis olarak işaretlerken bir yandan da providedIn parametresi ile de Angular'ın bu sınıfı nasıl provide edeceğinin konfigürasyonunu sağlayabilmekteyiz.
+
+- providedIn parametresi rooti any ve platform olmak üzere üç değer almaktadır.
+
+ProvidedIn root:
+
+- İlgili servisin uygulamanın ana modülüne(root modül/AppModule) singleton olarak eklenmesini sağlayan değerdir.
+
+- Uygulamanın hernang bir yerinden bu servise erişim sağlanabilir.
+
+- Servisi Singleton olarak provide edecektir.
+
+@Injectable({
+	providedIn: 'root'
+)}
+
+ProvidedIn any:
+
+İlgili servisi birden fazla instance'ı olacak şekilde provide eder.
+
+Her modüle karşın bir instance üretecektir.
+
+root parametresinde modül farketmeksizin tüm uygulama için tek bir instance oluşturacakken, any'de ise her modüle karşın yeni bir instance üretilecektir.
+
+@Injectable({
+	providedIn: 'any'
+)}
+
+ProvidedIn platform:
+
+Servislerin platforma özgü olduğunu ifade eden değerdir.
+
+Genellikle, Angular Universal gibi platform bağımsız uygulamalar için tasarlanmış servislerde kullanışlıdır.
+
+Bu uygulamaların hem server hem de client taraflarında çalışma modu gibi farklı koşulları mevcutturç Bu nedenli bir servis platforma özgü olduğunda her iki tarafa da farklı bir şekilde provide edilebilir.
+
+@Injectable({
+	providedIn: 'platform'
+)}
+
+Bunların dışında ayrıca provideIn parametresine ilgili servisin sadece hangi modül'de provide edileceğini de aşağıdaki gibi belirtebiliriz.
+
+@Injectable({
+	providedIn: AppModule
+)}
+
+---
+
+Provider'daki Servisi Inject Etme ve @Inject Decorator'u
+
+Provide edilmiş olan herhangi bir servisi inject ederken iki yöntem kullanabiliriz.
+
+@Injectable({
+	providedIn: 'root'
+)}
+export class ProductService{...
+
+---> Otomatik Yöntem
+
+@Component({
+  selector: 'app-root',
+  template: `zort`,
+})
+export class AppComponent {
+
+  constructor(private productService: ProductService) {
+  //burada yapılan tek parametre tanımlaması ile 
+    console.log(productService.getProducts())
+  }
+}
+
+//AppComponent ayağa kaldırılırken ProductService instance'ını provider'da arayıp varsa nesneyi 
+//buraya gönderiyor. Dolayısıyla otomatik olarak inject ediyor.
+
+---> Manuel Yöntem
+
+@Component({
+  selector: 'app-root',
+  template: `zort`,
+})
+export class AppComponent {
+
+  constructor(@Inject(ProductService) private productService) {
+    console.log(productService.getProducts())
+  }
+}
+
+Aslında otomatik yaklaşımda da arka planda @Inject decorator'u kullanılmaktadır. Çalışma mantığını anlamak için de manuel yöntemi kullanabiliriz. (fantazi işte)
+
+Her iki şekilde de provider'daki 'ProductService'i inject etmiş bulunuyoruz.
+
+---
+
+Bir Servisi Provide Etmenin Detayları
+
+- Uygulama sürecinde Dependency Injection Mekanizmasını kullanabilmek için servisleri provide etmemiz gerektiğini gördük. 
+
+- Angular'da bir servisi provide ederken o servise erişim gösterebileceğimiz DI Token ile ilişkilenirerek bu işlemi gerçekleştiririz.
+
+- DI Token'a ilgili servis'in ihtiyaç noktasındaki instance'ını çağırmamızı sağlayan aparattır diyebiliriz.
+
+- Bir servisi provide ederken type token, string token ve injection token olmak üzere üç tür token türünden istifade edebiliriz.
+
+- Ayrıca provide sürecinde ilgili dependency'nin nasıl oluşturulacağına dair de konfigürasyonlarda bulunabiliriz.
+
+- Bu konfigürasyonlar; class provider(useClass), value provider(useValue), factory provider(useFactory) ve aliased class provider(useExisting) olmak üzere 4 tanedir.
+
+Bir servisi provide etmek için ilgili modülün yahut component'in 'providers' özelliğini aşağıdaki gibi kullanabiliriz.
+
+providers: [ProductService]
+
+Bunun yanında bir servisi provide ederken aşağıdaki gibi de bir davranış sergilenebilir.
+
+providers: [{ provide: ProductService, useClass: ProductService}]
+
+Bu kullanımın 'provide' ve 'useClass' olmak üzere iki özelliği mevcuttur.
+
+Provider/Recipe yani burada useClass: ProductService, provide edilecek nesnenin tanımlandığı kısımdır.
+Angular'da ilgili dependency'nin nasıl oluşturulacağının kararının verildiği yerdir.
+Örnekte olduğu gibi 'useClass' kullanılıyorsa eğer bu, provide edilen değerin bir servis olduğunu ifade etmektedir.
+
+
+provide: ProductService kısmı provide edilecek olan servisi temsil edecek ve ihtiyaç dahilinde erişebilmemizi sağlayacak olan Token veya DI Token'dır. Bu değer örnekte de olduğu gibi herhangi bir referans (Type Token) olabileceği gibi string yahut InjectionToken türünden de tanımlanabilir.
+
+DI Token Türleri;
+
+Type Token : Herhangi bir türün token olarak kullanılmasıdır.
+
+providers: [{ provide: ProductService, useClass: ProductService}]
+constructor(private productService: ProductService)
+---
+
+String Token : Herhangi bir metinsel değerin token olarak kullanılmasıdır.
+
+providers: [{ provide: "ProductService", useClass: ProductService }]
+
+Eğer ki string token kullanılıyorsa ilgili dependency'i inject ederken aşağıdaki gibi @Inject decorator'u kullanmak zorunludur.
+
+constructor(@Inject ("ProductService") private productService)
+
+Tabi bu şekilde provide edilen değer bir nesneyse illaki o nesneyi sanki type token'mış gibi parametre referansı üzerinden talep edebilirsiniz.
+
+constructor(private productService: ProductService)
+bu kullanım da hata vermeyecektir ama string token'da kullanılan değerin türü yoksa yahut metinsel bir değerse o taktirde @Inject decorator'u zaruridir.
+---
+
+Injection Token : String token kullanılırken bazen farkında olmaksızın bir geliştiricinin oluşturduğu token'ı farklı bir geliştirici tekrardan kullanabilir. Böyle bir durumda aynı isimde tanımlanan token öncekini ezecektir.
+
+İşte bu durumlar için benzersiz tokenler oluşturmak isteyebiliriz.
+
+Bunun için de injection token'dan istifade ederiz.
+
+import { InjectionToken } from "@angular/core";
+
+export const productService = new InjectToken<string>("");
+
+ve
+
+providers: [{ provide: productService, useClass: ProductService}]
+
+ayrıca,
+
+constructor(@Inject(productService) private productService) 
+
+Örnek:
+
+app.module.ts;
+
+import { AppComponent } from './app.component';
+import { ProductService } from './productservice';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  //providers: [ProductService], //DI Token - Default Type Token
+  //providers: [{provide: ProductService, useClass: ProductService}],//yukarıdaki işlemin arkaplandaki hali. - Type Token
+  providers: [{provide: "productService", useClass: ProductService}],//String Token
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+String Token için app.component.ts'de;
+
+export class AppComponent {
+
+  constructor(@Inject("productService")private productService: ProductService) {
+    console.log(productService.getProducts())
+  }
+}
+
+değişikliğini yapmamız lazım.
+
+Sonuncu olan Injection Token için ise bu token'ları tutması için bir intection-token.ts dosyası açalım.
+(app'de)
+
+import { InjectionToken } from "@angular/core";
+
+export const productServiceIT : InjectionToken<any> = new InjectionToken("");
+//productServiceIT isminde bir injection token tanımlamış olduk.
+
+Bunu app.module.ts'de ekleyelim;
+
+  providers: [{provide: productServiceIT, useClass: ProductService}],
+
+Artık Dependency Injection Token'ınımız bir InjectionToken türünden olduğundan,
+app.component.ts'de;
+
+export class AppComponent {
+
+  constructor(@Inject(productServiceIT)private productService: ProductService) {
+    console.log(productService.getProducts())
+  }
+}
+
+şekline kullanabiliriz.
+
+Uygulamada çok sayıda Injection Token olduğunda bu şekilde dosyalarla yönetebiliriz.
+
+---
+
+Provider Türleri
+
+1- Class Provider: Bir tür/sınıf provide eidlecekse eğer kullanılan provider'dır. Şimdiye kadar bununla çalıştık.
+
+2- Value Provider: Basit/metinsel değerleri provide etmek istediğimizde kullanılan provider'dır.
+
+providers: [
+	{
+		provide: 'URL',
+		useValue:'https://www.myheroacademia.com'
+	}],
+Örnek olarak, Angular uygulamasından backend'e istek gönderirken, backend'in origin'ini burada provide olarak tutabiliriz.
+
+Ayrıca value provider'da aşağıdaki gibi bir fonksiyonuda provide edebiliriz.
+
+providers: [
+	{
+		provide: 'URL',
+		useValue: () => {
+			return 'https://www.myheroacademia.com'
+		}
+	}],
+
+BU şekilde kullanırken fonksiyonun komple inject edildiğini bilmek gerekir.
+
+constructor(@Inject("URL") private urlFunction: any)
+	const url: string = urlFunction();
+	console.log(url);
+	
+Inject ederken gelen değer fonksiyonun return değeri değil fonksiyonun ta kendisidir.
+
+Örnek:
+
+app.module.ts'de;
+
+providers: [
+    {provide: productServiceIT, useClass: ProductService},
+    {provide:"example", useValue:"merhaba"}
+  ],
+  
+ve app.component.ts'de;
+
+export class AppComponent {
+
+  constructor(@Inject(productServiceIT)private productService: ProductService,
+  @Inject("example") value: string) {
+    console.log(productService.getProducts())
+    console.log(value); 
+  }
+}
+
+Konsola baktığımızda merhaba yazdığını görürüz. useValue'nun metinsel değerlerle kullanımını gördük.
+
+Örnek:
+
+providers: [
+    {provide: productServiceIT, useClass: ProductService},
+    //{provide:"example", useValue:"merhaba"}
+    {provide:"example", useValue:() => {
+      return "merhaba"
+    }}
+  ],
+
+app.component.ts'de;
+
+export class AppComponent {
+
+  constructor(@Inject(productServiceIT)private productService: ProductService,
+  @Inject("example") func: any) {
+    console.log(productService.getProducts())
+    console.log(func()); 
+  }
+}
+
+ile konsolda ilgili fonksiyonun tetiklenmesi ile merhaba yazdığını görürüz.
+
+Not:
+console.log(func); şeklinde yazsaydık eğer konsolda,
+() => {
+      return "merhaba";
+    }
+yazdığını görürdük.	
+
+3- Factory Provider : Provide edilecek servisi yapılandırırken herhangi bir dış kaynaktan konfigürasyonel değer alınacaksa yahut farklı bir ihtiyaçtan dolayı bir API'ya bağlanılacaksa veya peovide edilecek nesne belirli şartlara göre farklı davranışlar sergileyecekse vs. bu ihtiyacı useFactory ile gerçekleştirebiliriz.
+
+providers: [
+	{
+	 provide:LoggerService,
+	 useClass: LoggerService
+	},
+	provide: "ProductType",
+	useValue: "A"
+	},
+	{
+	provide: AProductService,
+	useFactory: (productType, loggerService) => {
+		return productType == "A" ?
+			new AProductService(loggerService: new BProductService
+	},
+	deps: ["ProductType", LoggerService]}
+]	
+useFactory'e vermiş olduğumuz parametreleri deps: parametresinde sıralı olarak bildirmemiz gerekir.
+İlk parametreye ProductType, ikinci parametreye ise LoggerService token'ına karşılık olan değerin gideceğini ifade ettik.
+
+Dolayısıyla bu parametrelere bu değerlerin gidebilmesi için önce bu değerlerin de provide edilmiş olması gerekecektir.
+
+Yukarıda görüldüğü üzere 'AProductService' türünden bir nesneyi provide etmek istiyoruz. Lakin 'productType ProductType konfigürasyonuna göre bu geriye 'AProductService' ya da 'BProductService' nesnesi döndürmektedir. Yani burada provide edilecek nesneyi bir konfigürasyonel değerin durumuna göre yapılandırarak, örneklendirmiş oluyoruz.
+
+Örnek:
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { HttpClient , HttpClientModule} from '@angular/common/http';
+import { ProductService } from './productservice';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule
+  ],
+  providers: [
+    {provide: "productService", useFactory: (httpClient: HttpClient) => {
+      const obs = httpClient.get("https://jsonplaceholder.typicode.com/posts").subscribe({next: data => console.log(data)})
+      return new ProductService();
+    }, deps:[HttpClient]
+  }
+  ],
+  //HttpClient API'lara istekte bulunmamızı sağlayan hazır bir kütüphanedir.
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+ve app.component.ts;
+
+import { Component, Inject } from '@angular/core';
+import { ProductService } from './productservice';
+
+@Component({
+  selector: 'app-root',
+  template: `zort`,
+})
+export class AppComponent {
+
+  constructor(@Inject("productService") private productService: ProductService) {
+    console.log(productService.getProducts());
+   
+  }
+}
+
+Konsola bakarsak hem ürünleri elde ettiğimizi hem de bu nesne provide edilmeden önce yapılandırma amaçlı gerekli işlemleri de yürütmüş olduğumuzu görürüz.
+
+Dikkat edersek useValue ve useFactory'de fonksiyon tanımlayarak privde işlemlerini gerçekleştiriyoruz. Bu durumda ikisinin arasındaki farka değinmemiz gerekirse eğer, useValue provide edilen fonksiyonu döndürürken, useFactory fonksiyon içerisinde return edilen result'u döndürecektir.
+
+4- Aliased Class Provider
+
+Provide edilmiş olan bir servisi farklı bir referansla temsil etmek istediğimiz durumlarda kullanılır.
+
+providers: [
+	A,
+	{ provide: B, useClass: A },
+	{ provide: C, useExisting: A }
+],
+
+Burada A referansı direkt provide edilmiş,
+
+İkincisinde useClass ile birlikte B dependency injection token'ına karşılık A referansı provide edilmiş,
+
+Üçüncüsünde C dependency injection token'ına karşılık A referansı(nesnesi-instance'ı) yine provide edilmiştir.
+
+constructor(private a: A) 'da ilk provider için instance oluşturur.
+constructor(private b: B) 'da ikinci provider için instance oluşturur.
+constructor(private c: C) 'da c parametresine ilk provider'ın intance'ı inject edilir.
+
+Yani C DI Token'ına karşılık provide edilmiş A instance'ını veriyoruz. Yaaaani var olan A instance'ı C'ye gönderilecektir. c talebinde bulunulduğunda yollanacaktır.
+
+------------------------------------------------------
+
+@Self - @SkipSelf - @Optional Decorator'ları
+
+Bu decorator'ler ile DI Mekanizmasının dependency'leri nasıl resolve etmeleri gerektiğini belirtebilmekte ve böylece injector'ların davranışlarını değiştirebilmekteyiz.
+
+Injector'ların davranışlarını değiştirdikleri için bu decorator'lara Resolution Modifiers adı verilmektedir.
+
+Önce uygulamada kullanacağımız dosyaları ayarlayalım.
+
+random.service.ts adında rastgele değer üreten bir servisimiz olsun.
+
+import { Injectable } from '@angular/core';
+
+@Injectable({
+    providedIn: 'root'
+})
+
+export class RandomService {
+    private _random: number = 0;
+    constructor() {
+        console.log(`RandomService created.`);
+        this._random = Math.floor(Math.random() * 1000)
+    }
+    get random(): number {
+        return this._random;
+    }
+}
+
+Ardından aşağıdaki gibi birbirlerini referans eden component'lerde kullandığımızı varsayalım.
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  AppComponent => {{randomService.random}} <br>
+  <app-a></app-a>
+  `,
+})
+export class AppComponent {
+
+  constructor(public randomService: RandomService){
+
+  }
+}
+
+a.componant.ts;
+
+import { Component } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-a',
+  template: `
+    AComponent => {{randomService.random}} <br>
+    <app-b></app-b>
+
+  `,
+})
+export class AComponent {
+  constructor(public randomService: RandomService){
+
+  }
+}
+
+ve b.component.ts;
+
+import { Component } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-b',
+  template: `
+    BComponent => {{randomService.random}} <br>
+  `,
+})
+export class BComponent {
+  constructor(public randomService: RandomService){
+
+  }
+}
+
+app.module.ts'de de ilgili declarations ve import'ları kontrol etmeyi unutmayalım.
+
+Şu haliyle ekranda;
+
+AppComponent => 375
+AComponent => 375
+BComponent => 375
+
+gibi tüm component'lerde aynı değerleri görürüz. 
+
+Çünkü Angular mimarisinde RandomService provide edildiğinde default olarak Singleton bir tutum sergilemekte ve tüm component'lere tekil olarak resolve edilmektedir.
+
+---
+
+@Self Decorator : İlgili dependency'nin yalnızca geçerli olan component yahut directive'de aranmasının talimatını verir.
+
+b Component'de çalışalım.
+
+import { Component, Self } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-b',
+  template: `
+    BComponent => {{randomService.random}} <br>
+  `,
+  providers: [RandomService] //null hatasından korunmak için.
+})
+export class BComponent {
+  constructor(@Self()public randomService: RandomService){
+  }
+}
+
+Ekranda,
+
+AppComponent => 920
+AComponent => 920
+BComponent => 340
+
+görürüz.
+
+Çünkü b Component', Self() decoratörü ile RandomService'i kendi provider'ında arayacaktır.
+Dolayısıyla farklı bir instance olacağından farklı bir random sayı dönecektir.
+Yine Singleton bir tutumda ama farklı instance..
+
+AppComponent ile AComponent aynı Singleton nesneyi, B Component ve varsa child'ları farklı nesneyi kullandığından ilk iki sonuç aynı üçüncü farklıdır.
+
+Eğerki B'nin child'ları olsaydı onlarda B ile aynı değeri verirdi. (CComponent vs. olsaydı.)
+
+---
+
+@SkipSelf Decorator: İlgili dependency'i component'de değil o component'in çağrıldığı bir üst component'te aranmasının talimatını verir.
+
+a.component.ts;
+
+import { Component, Self } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-a',
+  template: `
+    AComponent => {{randomService.random}} <br>
+    <app-b></app-b>
+  
+  `,
+  providers: [RandomService]
+})
+export class AComponent {
+  constructor(@Self()public randomService: RandomService){
+
+  }
+}
+
+b.component.ts;
+
+import { Component, Self, SkipSelf } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-b',
+  template: `
+    BComponent => {{randomService.random}} <br>
+  `,
+  providers: [RandomService] 
+})
+export class BComponent {
+  constructor(@SkipSelf()public randomService: RandomService){
+    //SkipSelf() ile BComponent'i yukarıdaki tanımladığımız provider'ı değil bir üstteki(parent) //olan A'daki provider'ı kullanacaktır.
+  }
+}
+
+
+ve ekranda;
+
+AppComponent => 915
+AComponent => 563
+BComponent => 563
+
+görürüz. Çünkü bu sayede A ve B'yi aynı instance'a bağladık. Eğer ki B'de Self() deseydik o zaman A ile farklı sonuç görürdük.
+
+---
+
+@Optional Decorator: OPtional Decorator'u ilgili dependency'e erişimi opsiyonel bir hale getirir.
+
+Bu şekilde B'de null hatası verilecektir.
+
+import { Component, Self, SkipSelf } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-b',
+  template: `
+    BComponent => {{randomService.random}} <br>
+  `,
+  providers: [] 
+})
+export class BComponent {
+  constructor(@Self()public randomService: RandomService){
+  }
+}
+
+Error: NG0201: No provider for RandomService found in NodeInjector. 
+  
+Çünkü Self()'de bir provider yok.
+
+B Component'de;
+
+import { Component, Optional, Self, SkipSelf } from '@angular/core';
+import { RandomService } from './random.service';
+
+@Component({
+  selector: 'app-b',
+  template: `
+    BComponent => {{randomService?.random}} <br>
+  `,
+  providers: [] 
+})
+export class BComponent {
+  constructor(@Optional()@Self()public randomService: RandomService){
+  }
+}
+
+Null hatası verilmesin, opsiyonel bir tutum sergilensin istiyorsak ilgili inject operasyonunu
+@Optional()@Self() ile işaretliyoruz.
+
+Fakat bu yetmez, B Component'inde inject sürecinde bir null hatası artık almayız.
+
+randomService referansı artık null olacağı için üzerinden .random property'sini çağıramayız.
+Bunu da nullable ? operatörü ile çözeriz.
+
+Ekranda;
+
+AppComponent => 591
+AComponent => 443
+BComponent =>
+
+yazdığını görürüz.
+
+---
+
+ViewProviders: Bu özellik kullanıldığı component'in template'inde referans edilen tüm alt component ve directive'lere servis provide etmemizi sağlayan bir özelliktir.
+
+@Component({
+	selector:'App-root',
+	template: `
+	<app-a></app-a>
+	`,
+	viewProviders: [RandomService]
+}]
+export class AppComponent{
+}
+

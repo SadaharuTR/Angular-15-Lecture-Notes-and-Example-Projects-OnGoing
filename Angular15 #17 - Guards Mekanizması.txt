@@ -1,0 +1,596 @@
+Angular Guards Nedir?
+
+- Angular'da Guard yapılanmaları uygulamadaki rotalara erişim izni vermek yahut reddetmek için kullanılan mekanizmalardır.
+
+- Genellikle kullanıcıların oturum işlemleri, kimlik doğrulama süreçleri, rol ve sayfalara erişim yetkileri Guard'lar üzerinden kontrol edilmektedir.
+
+Angular'da CanActivate, CanDeactivate, Resolve, Canload(artık CanMatch oldu) ve CanActivateChild olmak üzere 5 adet guard yapısı mevcuttur.
+
+- CanActivate: Kullanıcı  tarafından erişilmek istenen rotanın etkinleştirip etkinleştirilmeyeceğine veya component'in kullanılıp kullanılmayacağına karar veren guard'dır. Genellikle ilgili kullanıcının hedef component'e erişim istediği durumlarda yetki kontrolü yapmak için kullanılmaktadır.
+
+- CanActivateChild: Bu guard ise bir child route'a erişilip erişilmeyeceğinin kararını vermektedir. CanActivate'in amcasının oğludur. CanActivate; ana rotalar için geçerliyeken alt rotalarda çalışmayacaktır. Bu durumda CanActivateChild devreye girecektir.
+
+- Resolve: Bu guard yapısı bazı görevler tamamlanana kadar rotanın etkinleştirilmesini geciktirecektir. Genellikle, talep edilen component'in işlevsel hale gelebilmesi için bir endpoint üzerinden verilere ihtiyaç olduğu durumlarda, sayfaya yönlendirme yapılmaksızın önce API'dan verilerin çekilip hazırlanması gerektiği durumlarda kullanılır.
+
+* CanLoad: Bir modülün kontrollü bir şekilde yüklenmesini sağlar. Rotanın erişimini kontrole edip gerekirse engellerken, CanLoad ise Lazy Loading ile yüklenecek modüllerin yüklenmesini kontrol edecek ve gerekirse engelleyecektir. 
+
+Not: Tüm bunların dışında Angular 14'de CanMatch guard yapısı gelmiş ve CanLoad depcreated edilmiştir.
+
+- CanDeactivate: Kullanıcının bulunduğu component'in ayrılıp ayrılmayacağına karar veren ya da bir başka deyğişle geçerli rotadan çıkmak istediği durumu kontrol eden guard'dır. Genellikle kullanıcı tarafından işlem yapılan sayfalarda, keydedilmemiş verilerin olabileceği durumlarda çok önemlidir.
+
+- CanMatch: Bu guard sayesinde aynı rotayı farklı şartlarda erişilebilecek şekilde tanımlayabilmek mümkünleşmektedir.(Normalde bir path sadece ve sadece tek bir sefer tanımlanır.=
+
+{
+	{ path: '', component: LoggedInHomeComponent, canMatch: [IsLoggedIn] },
+	{ path: '', component: HomeComponent }
+}
+
+Misal olarak uygulamanın boş path'ine login yapıldığı haliyle girildiğinde gelecek sayfa içeriğiyle,
+login yapılmaksızın gelecek içerik farklı olacaktır.
+
+İşte bu tarz aynı rota için birden fazla şartlı kontrol yapabilmemizi sağlayan bir Guard'dır.
+
+---
+
+Guard Nasıl Oluşturulur ve Kullanılır?
+
+- Yakın zamana kadar Angular'da guard yapıları özel interface'ler üzerinden şöyle tanımlanmaktaydı
+
+export class CanActivateGuard implements CanActivate //CanActivate üstü çizili
+...
+export class CanMatchGuard implements CanMatch //CanMatch üstü çizili.
+
+'CanActivate' is deprecated.
+...
+'CanMatch' is deprecated.
+
+Fakat bu interface'ler her ne kadar deprecated edilmiş olsa da hala Angular içerisinde gelmektedirler.
+
+Eski usül olarak bu interface'ler üzerinden guard'ların nasıl tanımlandığını ve sonrasında ise Angular'da ki guard'lar için daha da idealleştirilmiş bir yeni davranış olan Functional Router Guard isimli yaklaşımını, nedenleriyle birlikte inceleyelim.
+
+Şimdi öncelikle bir guard'ı oluşturmak ve kullanabilmek için eski usule göre incelemede bulunalım.
+
+Bunun için aşağıdaki 4 adımın uygulanması gerekir.
+
+1- İhtiyaç olan guard için bir sınıf oluşturunuz ve hangi  guard'ı kullanacaksanız onun interface'İnden türetiniz. Ya da Angular CLI üzerinden guard talimatı vererek uygun türde guard'ı oluşturabilirsiniz.
+
+2- Guard'ın yapacağı işlemi metot içerisinde uygulayınız.
+
+3- Guard'ı import ediniz.
+
+4- Guard'ı ilgili route'a uygun property üzerinden ekleyiniz.
+
+Tüm bu süreci misal olarak CanActivate guard'ı üzerinden örneklendirelim.
+
+Adım 1: Guard Oluştur.
+
+- Guard'ı oluşturabilmek için bir sınıf oluşturup , CanActivate interface'ini implement edebilir ya da Angular CLI üzerinden aşağıdaki gibi istediğimiz türden guard'ı oluşturabiliriz.
+
+ng g g guard/example
+
+Which type of guard .... blabla?
+
+>(*) CanActivate
+ (*) CanActivateChild
+ (*) CanDeactivate
+ (*) CanLoad
+ (*) CanMatch
+
+enter'a bas ve guard'ı oluştur.
+
+Bunu yaptıktan sonra ilgili dizinde verilen isimde bir guard oluşturup, ExampleGuard sınıfını da CanActivate ile implement ederek getirecektir. (isimsel gelenek)
+
+import....
+
+@Injectible({
+	providedIn: 'root'
+})
+
+export class ExampleGuard implements CanActivate{
+	canActivate(
+		route:..
+		state:...
+		return true,
+	}
+)
+
+Görüldüğü üzere guard özünde bir injectable'dır. Yani servistir.
+
+Adım 2: İşlev
+
+- Guard'ı oluşturduktan sonra işlevinizi misal aşağıdaki gibi gerçekleştiriniz.
+
+canActivate(
+	route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+	let userAuthenticated: boolean = true
+	if (userAuthenticated)
+	 return true
+	return false
+}
+
+Gerekli authentication işleminden sonra sonucu döndürdüğümüzü varsayalım.
+
+True dönerse istek yapılan yere gidilecek, false dönerse gitmeyecektir.
+
+Adım 3: Import
+
+- Hazırlanan guard'ı kullanabilmek için uygun modülde import ediniz. KEza guard yapısı Angular CLI ile oluşturulduğunda default olarak providedIn özelliği 'root' olacağından bu işlemi bizzat yapmamıza gerek yoktur.
+
+Adım 4: Route'a ekle.
+
+- Artık bu guard'ın hangi route'da kullanılmasını istiyorsanız onun tanımına aşağıdaki gibi ekleyiniz.
+
+path: "products", component: ProductComponent, canActivate: [ExampleGuard]
+
+Bu guard artık products endpoint'İne gelecek isteklerde kararı verecek bir sorumluluğa sahiptir.
+
+---
+
+CanActivate - CanActivateFn
+
+- Bir kullanıcının ilgili path'e erişim izninin olup olmadığını kontrol etmek için kullanılır.
+
+Yeni Kullanımda;
+
+CanActivate guard'ını artık 'CanActivateFn' fonksiyonu türünden tanımlayabilmekte ve direkt fonksiyon olarak kullanabilmekteyiz.
+
+export const canActivateExample: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+	return true;
+}
+
+CanActivate Guard'nı eski veya yeni yöntem farketmeksizin 'canActivate' dizinine tanımlayarak ilgili path ile ilişkilendirebiliriz.
+
+{ path: "products", component: ProductComponent, canActivate: [canActivateExample],..}
+
+
+Uygulamada;
+
+app->guards->guards.ts açalım ve tüm guard işlemlerini burada yapalım.
+
+import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from "@angular/router";
+
+export const canActivateGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanActivate Guard tetiklendi.');
+    
+    return true //false ile de deneyelim.
+}
+
+Şimdi app-routing.module.ts'e gidip guard'ın hangi rotayı korumasını istiyorsak oraya monte ediyoruz.
+
+const routes: Routes = [
+  { path: "", redirectTo: "/home" , pathMatch: "full"},
+  { path: "home", component: HomeComponent },
+  { path: "about", component: AboutComponent },
+  {
+    path: "products", component: ProductsComponent, 
+    canActivate: [canActivateGuard], //istediğimiz kadar guard ekleyebiliriz.
+    children: [
+      { path: "detail/:id", component: ProductDetailComponent }
+    ]
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+Konsolda Products'a tıklandıkça CanActivate Guard tetiklenir.
+
+eğer ki,
+
+return false deseydik Products'a tıkladığımızda gidemezdik.
+
+Ama yine de konsolda CanActivate Guard tetiklenirdi.
+
+---
+
+CanActivateChild - CanActivateChildFn
+
+- Bir kullanıcının ilgili child route'a erişim izninin olup olmadığını belirler.
+
+- CanActivateChild guard'ını artık 'CanActivateChildFn' fonksiyonu türünden tanımlayabilmekte ve direkt fonksiyon olarak kullanabilmekteyiz.
+
+export const canActivateChild: CanActivateFn = (childRoute: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+	return true;
+}
+
+bu guard'ı 'canActivateChild' dizinine tanımlayarak ilgili path ile ilişkilendirebiliriz.
+
+{
+	path: "products", component: ProductComponent,
+	canActivateChild: [canActivateChild], ..
+gibi.
+
+Uygulamada;
+
+guard.ts'de,
+
+import { ActivatedRouteSnapshot, CanActivateFn, RouterStateSnapshot } from "@angular/router";
+
+//canActivate Guard'ı
+export const canActivateGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanActivate Guard tetiklendi.');
+    
+    return true
+}
+//canActivateChild Guard'ı
+export const canActivateChildGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanActivate Guard Child tetiklendi.');
+    
+    return true
+}
+
+app-routing.module.ts'de ise path'de;
+
+import { ProductsComponent } from './components/products/products.component';
+import { ProductDetailComponent } from './components/products/product-detail/product-detail.component';
+import { canActivateChildGuard, canActivateGuard } from './guards/guards';
+
+const routes: Routes = [
+  { path: "", redirectTo: "/home" , pathMatch: "full"},
+  { path: "home", component: HomeComponent },
+  { path: "about", component: AboutComponent },
+  {
+    path: "products", component: ProductsComponent, 
+    canActivate: [canActivateGuard], 
+    canActivateChild: [canActivateChildGuard], //burada tanımlayalım.
+    children: [
+      { path: "detail/:id", component: ProductDetailComponent }
+    ]
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+şu anda true olduğu için Product sonra Product Detail'e tıkladığımızda erişebilir ve konsolda tetiklendi yazısını görebiliriz.
+
+false yaparsak Product Detail'e tıklasakta sayfaya erişemeyiz.
+
+---
+
+CanDeactivate - CanDeactivateFn
+
+- Kullanıcının bulunduğu path'ten başka bir path'e geçebilmesinin iznini kontrol etmek için kullanılmaktadır.
+
+- CanDeactivate guard'ını artık 'CanDeactivateFn' fonksiyonu türünden tanımlayabilmekte ve direkt fonksiyon olarak kullanabilmekteyiz.
+
+export const canDeactivateGuard: CanDeactivateFn<unknown> =
+	( component: unknown,
+		currentRoute: ActivatedRouteSnapshot,
+		currentState: RouterStateSnapshot,
+		nextState: RouterStateSnapshot) => {
+		return true
+	}
+	
+path üzerinde 'canDeactivate' dizinine tanımlayarak ilgili path ile ilişkilendirebiliriz.
+
+{
+	path: "products", component: ProductComponent,
+	canDeactivate: [canDeactivateGuard],
+..
+
+Uygulamada;
+
+guard.ts;
+
+import { ActivatedRouteSnapshot, CanActivateFn, CanDeactivateFn, RouterStateSnapshot } from "@angular/router";
+
+//canActivate Guard'ı
+export const canActivateGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanActivate Guard tetiklendi.');
+    
+    return true
+}
+//canActivateChild Guard'ı
+export const canActivateChildGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanActivate Guard Child tetiklendi.');
+    
+    return false
+}
+
+//canDeactivate Guard'ı
+
+export const canDeactivateGuard: CanDeactivateFn<any> = (component: any, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('CanDeactivate Guard tetiklendi.');
+    
+    return true
+}
+
+app-routing.module.ts;
+...
+const routes: Routes = [
+  { path: "", redirectTo: "/home" , pathMatch: "full"},
+  { path: "home", component: HomeComponent },
+  { path: "about", component: AboutComponent },
+  {
+    path: "products", component: ProductsComponent, 
+    canActivate: [canActivateGuard], 
+    canActivateChild: [canActivateChildGuard], //burada tanımlayalım.
+    //products'a girildiği taktirde çıakrken kontrol edilsin istiyorsak,
+    canDeactivate: [canDeactivateGuard], //şeklinde tanımlayabiliriz.
+    children: [
+      { path: "detail/:id", component: ProductDetailComponent }
+    ]
+  }
+];
+...
+
+Products'a tıklayıp About'a geçmeye çalışırsak konsolda CanDeactivate Guard tetiklendi. yazısını görürüz.
+
+return false deseydik geçişi yasaklayacaktı ve konsolda CanDeactivate Guard tetiklendi. yazısını görüyor olacaktık.
+
+---
+
+Resolve - ResolveFn
+
+- Kullanıcı tarafından talep edilen rotadaki içeriğin yönlendirme gerçekleştirilmeden önce tam olarak oluşturulmasını beklemek için kullanılmaktadır.
+
+- Resolve guard'ını artık 'ResolveFn' fonksiyonu türünden tanımlayabilmekte ve direkt fonksiyon olarak kullanabilmekteyiz.
+
+export const resoveGuard: ResolveFn<any> = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+	const httpClient = inject(HttpClient)
+	return httpClient.get("https://jsonplaceholder.typicode.com/photos")
+}
+
+Resolve guard'ını path üzerinde 'resolve' alanına aşağıdaki gibi tanımlayarak ilgili path ile ilişkilendirebiliriz.
+
+{
+	path: "products", component: ProductComponent,
+	revolve: { photos: resolveGuard },
+	..
+	
+Tabi Resolve Guard'ı tanımladıktan sonra da aşağıdaki gibi ActivatedRoute üzerinden kullanabiliriz.
+
+export class ProductComponent implements OnInit{
+  
+  constructor(private router: ActivatedRoute) { }
+  datas: any;
+  ngOnInit(): void {
+    this.datas =this.router.data.subscribe(photos => {
+		this.datas = photos;
+	})
+  }
+}
+
+
+Uygulamada;
+
+products.component.ts'de;
+
+import { Component, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable()
+@Component({
+  selector: 'app-products',
+  template:`Products <br>
+  <router-outlet></router-outlet>
+  <br>
+  <ul>
+    <li *ngFor="let photo of photos">
+      <a routerLink="[photo.id]">{{photo.url}} </a>
+    </li>
+  </ul>
+  `
+})
+export class ProductsComponent implements OnInit{
+  
+  constructor(private httpClient: HttpClient) { }
+  photos: any;
+  ngOnInit(): void {
+    this.httpClient.get("https://jsonplaceholder.typicode.com/photos")
+    .subscribe((photos: any) => this.photos = photos)
+  }
+}
+
+çalışmasını yapalım. Böyle bir durumda bir süre boş bir sayfada bekledikten sonra ilgili sonuçlar ekrana gelecektir. Bunu önlemek için resolve guard'ını kullanalım.
+
+guards.ts'de;
+
+...
+
+//resolve Guard'ı
+export const resolveGuard: ResolveFn<any> = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+    //türlü türlü hinlikler işlemler
+    console.log('Resolve Guard tetiklendi.');
+    const httpClient = inject(HttpClient);
+    return httpClient.get("https://jsonplaceholder.typicode.com/photos")
+    
+}
+
+rota modülünde;
+
+const routes: Routes = [
+  { path: "", redirectTo: "/home" , pathMatch: "full"},
+  { path: "home", component: HomeComponent },
+  { path: "about", component: AboutComponent },
+  {
+    path: "products", component: ProductsComponent, 
+    canActivate: [canActivateGuard], 
+    canActivateChild: [canActivateChildGuard], //burada tanımlayalım.
+    //products'a girildiği taktirde çıakrken kontrol edilsin istiyorsak,
+    canDeactivate: [canDeactivateGuard], //şeklinde tanımlayabiliriz.
+    resolve: {photos : resolveGuard},
+
+    children: [
+      { path: "detail/:id", component: ProductDetailComponent }
+    ]
+  }
+];
+
+Son olarak product.component.ts'i yeniden düzenlersek;
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-products',
+  template:`Products <br>
+  <router-outlet></router-outlet>
+  <br>
+  <ul>
+    <li *ngFor="let photo of photos">
+      <a routerLink="[photo.id]">{{photo.url}} </a>
+    </li>
+  </ul>
+  `
+})
+export class ProductsComponent implements OnInit{
+  
+  //constructor(private httpClient: HttpClient) { }
+  constructor(private activatedRoute: ActivatedRoute) { }
+  photos: any;
+  ngOnInit(): void {
+    this.activatedRoute.data.subscribe((data:any) => this.photos = data["photos"])
+  }
+}
+
+Artık Home'dan Products'a tıkladığımızda bir süre Home'da bekleyip Products'lar yüklenince yani istek sonuçlanınca o zaman gerekli yönlendirme işlemi gerçekleşecektir.
+
+---
+
+CanMatch - CanMatchFn
+
+- Aynı rotaya farklı şartlarda farklı component'leri yüklememizi sağlamaktadır.
+
+- Yeni kullanımda CanMatch guard'ını artık 'CanMatchFn' fonksiyonu türünden tanımlayabilmekte ve direkt fonksiyon olarak kullanabilmekteyiz.
+
+export const isAdminGuard: CanMatchFn = (route: Route, segments: UrlSegments[]) => {
+	return true
+}
+
+export const isUserGuard: CanMatchFn = (route: Route, segments: UrlSegments[]) => {
+	return true
+}
+
+CanMatch guard'ını path üzerinde 'canMatch' dizinin tanımlayarak ilgili path ile ilişkilendirebiliriz.
+
+const routes: Routes = [
+	{ path: "", component: AdminComponent, canMatch: [IsAdminGuard]},
+	{ path: "", component: UserComponent, canMatch: [IsUserGuard]},
+
+Fonksiyonel olarak hangisi true dönüyorsa o component yüklenecektir.
+Fakat ikisi de true ise öncelikli olan guard hangisinde tanımlıysa o yüklenecektir. (yani burada Admin)
+
+Uygulamamızda;
+
+admin ve user component'leri oluşturalım.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-admin',
+  template:`<h5>Admin</h5>`
+})
+export class AdminComponent {
+
+}
+
+ve
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-user',
+  template:`<h5>User</h5>`
+})
+export class UserComponent {
+
+}
+
+app.component.ts'de dashboard ekleyelim;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template:`
+  <a routerLink="home">Home</a> | <a routerLink="dashboard">Dashboard</a> | <a routerLink="about">About</a> | <a routerLink="products">Products</a> <br>
+  <router-outlet></router-outlet>
+`
+})
+export class AppComponent {
+  title = 'guards_Example';
+}
+
+guard.ts'de;
+
+
+//canMatch Guard'ı
+
+export const isAdminGuard: CanMatchFn = ( route: Route, segments: UrlSegment[]) => 
+{
+    return !!localStorage.getItem("admin")
+}
+
+export const isUserGuard: CanMatchFn = ( route: Route, segments: UrlSegment[]) => 
+{
+    return !localStorage.getItem("user")
+}
+
+rota modülünde;
+
+..
+const routes: Routes = [
+  { path: "", redirectTo: "/home" , pathMatch: "full"},
+  { path: "home", component: HomeComponent },
+  { path: "about", component: AboutComponent },
+  { path: "dashboard", component: AdminComponent, canMatch: [isAdminGuard]},
+  { path: "dashboard", component: UserComponent, canMatch: [isUserGuard]},
+  ...
+ 
+isAdminGuard geçerli ise AdminComponent'i, isUserGuard geçerli ise UserComponent'i yükle demiş olduk.
+
+---
+
+Guard'ların Çalıştırılma(Execution) Sıralaması
+
+CanMatch -> CanActivate -> Resolve -> CanDeactivate
+		   ->CanActivateChild
+
+Rotaya erişebilmek için ilgili modül ve component'lerin yüklenmesi gerekmektedir. Haliyle bu izinlerin olduğu CanMatch guard'ı kontrol edilecek ve ilk o tetiklenecektir.
+
+Eğer modül component'lerin yüklenmesinin izni verilmişse, ilgili rotaya erişim izni kontrol edilecektir. Bunun için de CanActivate tetiklenecektir. Eğer ki rota bir child route ise CanActivateChild tetiklenecektir.
+
+Rotanın yüklenmesi için öncelikle component'teki verilerin yüklenmesi gerekiyorsa eğer bunun için Resolve guard'ı devreye girecektir.
+
+Son olarak ilgili rotadan ayrılma durumu söz konusu olduğunda buna izin verilip verilmeyeceği kontrol edilecek ve CanDeactivate guard'ı tetiklenecektir.
+
+---
+
+Functional Router Guard Neden Geldi?
+
+- Bu geçisin temelleri arasında sadeleştirilmiş bir JS formatında çalışma arzusu vardır.
+Interface'lerden kaçınma durumu söz konusudur.
+
+- Normalde eski düzende bir interface üzerinden tanımlanan guard yapılanması esasında sadece bir fonksiyonel görev göreceği i-halde standartın getirdiği katı ve esneklikten uzak bir tanıma sahipti.
+
+- Functional Router Guard özelliği ile artık guard'lar olması gereken esnekliğe ve fonksiyonelliğe sahiptir. Böylece daha hızlı bir yazım süreci olmaktadır.
+
+- Bunun dışında, Angular 14 ile gelen inject fonksiyonu ile artık dependency injection'ı constructor üzerinden uygulamak yerine fonksiyonlar içerisinde de provider'dan istediğimiz nesneyi talep edebilmekteyiz.
+
+- Böylece artık bir guard işlemi yapacak fonksiyon için onca class tanımına, ctor'a, vs. ihtiyaç duymaksızın salt bir fonksiyonla iş odaklı çalışabiliriz.
+
+Functional Router Guard'ın Avantajları
+
+- Rota tanımında gurad'ın tanımlanabilmesi.(ekstra ts oluşturmadan burada imzasıyla fonksiyonu da tanımlayabiliriz.)
+
+- Basitleştirilmiş mantık,
+
+- Kısa, kolay okunabilir kod,
+
+- Sınıf oluşturma ek yüküne gerek kalmamış iyileştirilmiş performans.
+

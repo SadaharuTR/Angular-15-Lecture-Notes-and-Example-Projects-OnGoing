@@ -1,0 +1,175 @@
+Interpolation Syntax Nedir?
+
+Angular'da Component Class'ı içeriisndeki herhangi bir field yahut property'nin değerinin {{...}} operatörü aracılığıyla HTML içerisinde kullanılmasına Text Interpolation,
+bu ifadeye ise Interpolation Syntax denir.
+
+- One-Way yani tek yönlü Data Binding gerçekleştirmektedir.
+
+Interpolation'da Neler Kullanılamaz?
+
+- Interpolation, yapısal olarak sadece field veya property değerlerini okumak ve böylece Template'e yansıtmak için kullanılır. Bundan dolayı uygulamanın durumunu(state)
+değiştirebilecek herhangi bir işlem gerçekleştirememektedir. 
+
+-Bu mantıkta işlem neticesinde state değişikliğine sebebiyet verebilecek aşağıdaki operatörler, keyword'ler ve işlemler Interpolation ile birlikte kullanılamaz.
+
+Assign Operatörleri (=, +=,-=)
+new, typeof, instanceof vs. keywordler
+; operatörü
+Arttırma-Azaltma(increment-decrement) operatörleri (++,--)
+Bitwise operatörler
+
+Örnek: //Hata alırız.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <p>{{sayi++}}</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    sayi: number = 10;
+}
+
+Fakat,
+
+Bunların dışında interpolation da iki değişkeni aritmetik işleme tabii tutabilir,
+string birleştirme yapabilir,
+template referansı kullanabilir, (ileride)
+ya da herhangi bir fonksiyonu tetikleyebliriz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  {{sayi1 + sayi2}}
+  {{hi()}}
+  <p>123</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    sayi1: number = 10;
+    sayi2: number = 20;
+
+    hi(){
+      alert("uyan!")
+    }
+}
+
+---
+
+Interpolation'da Script/HTML Kodları Çalıştırılabilir mi?
+
+Angular, Interpolation ile DOM'a ekleyeceği içeriği her şeyden önce sterilize ederek Cross_Site Scripting Security (XSS) hatalarına karşı bir önlem alır. Bu yüzden Interpolation ile gelen Script vey HTML kodları handle edilmeksizin oldukları gibi (metinsel olarak) yansıtılırlar.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  {{html}}
+  <hr>
+  {{script}}
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    html: string = "<h1>merhaba</h1>";
+    script: string = `<script>alert("merhaba dünya")</script>`;
+}
+
+Ekranda,
+
+<h1>merhaba</h1>
+<script>alert("merhaba dünya")</script>
+
+yazacaktır.
+
+---
+
+ngNonBindable Nedir?
+
+- Interpolation operatörünün compile edilmesini istemediğimiz durummlarda bu özelliği kullanabiliriz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <p>{{text}} dünya!</p>
+  <p ngNonBindable>{{text}} dünya!</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    text: string = "merhaba"
+}
+
+Ekranda;
+
+merhaba dünya!
+
+{{text}} dünya!
+
+yazacaktır.
+
+---
+
+Ekstradan Interpolation ile Kullanılan Operatörleri
+
+- Angular'da Interpolation ile ekstradan da aşağıdaki yapılar kullanılır.
+
+	- Pipes, -> {{text | uppercase}}
+	- Nullable operatörü(?), 
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <p>{{person.name}}</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    person: {name: string, surname: string};
+}
+
+Studio'da Compiled successfully yazacaktır. Fakat sayfaya gidip incele-console'a baktığımızda olmayan object'in instance'ını kullanmaya çalışıyorsak,
+ERROR TypeError: Cannot read properties of undefined (reading 'name') hatasını alırız.
+
+Çözmek için nullable operatörünü kullanırız.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <p>{{person?.name}}</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    person: {name: string, surname: string};
+}
+
+ile hata kalkar. person null değilse name'ini çağır dedik.
+
+	- Non-null Assertion Operatörü ! (referansımda kesinlikle bir nesne var. Devam et. Sorumluluk bende.)
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <p>{{person!.name}}</p>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    person: {name: string, surname: string};
+}

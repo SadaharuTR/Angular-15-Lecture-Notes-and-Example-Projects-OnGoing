@@ -1,0 +1,189 @@
+Angular'da Temel Component Yapılanması
+
+Components: Uygulamanın mühim bir parçasıdır. Genellikle Angular uygulamasında görevleri sayfa altyapıları olarak kullanılmalarıdır. Bunun dışında sayfa olarak kullanılan component'lerin alt component'i olarakta kullanılabilmekte ve böylece partial mantığında sayfaları geliştirmemize de imkan vermektedirler.
+
+- Her component, kendi işlevselliğine ve görünümüne odaklıdır ve diğer component'lerden bağımsız olarak çalışırlar. Böylece değiştirilmesi/onarılması/modifiye edilmesi gereken noktalar için sadece ilgili component üzerinde çalışmak yeterli oalcaktır. 
+
+- Component'ler, birbirleriyle iletişim kurarak, büyük ve karmaşık uygulamaları oluşturmayı kolaylaştırır.
+
+Component'lerin Bileşenleri
+
+app.component.ts dosyasına bakarsak;
+
+import { Component } from '@angular/core';
+
+//.ts dosyamızda @Component diye bir decorator ve bu decorator içerisinde field'larımız var.
+@Component({ //metadata
+  selector: 'app-root', //selector
+  templateUrl: './app.component.html', //template, bu dizindeki şu dosya template'dir der.
+  styleUrls: ['./app.component.scss'] //style
+}) 
+export class AppComponent { //component class
+  title = 'proje1';
+}
+
+---
+
+template: 
+
+- Component'in görsel çalışmalarının yapıldığı parçasıdır.
+- İçerisinde HTML kodunun eşliğinde directive ve pipe gibi özel Angular elemanları ve Data Binding davranışları kullanılabilmektedir.(düz html'den farklı olarak)
+
+Yani src/app içerisindeki app.component.html dosyamız default olarak oluşturulan component'in template yapıtaşıdır.
+
+-> Component'imizi oluşturan dörtlü;
+app.component.html
+app.component.scss
+app.component.spec.ts
+app.component.ts
+
+- Component'in .html dosyasına karşılık gelmektedir ve component ile 'templateUrl' field'ı üzerinden ilişkilendirilmektedir.
+
+- Eğer ki template işlemlerini fiziksel olarak ayrı bir dosya üzerinden gerçekleştirmek istemiyorsanız direkt .ts içerisinde 'template' field'ına karşılıkta çalışmaları gerçekleştireblirsiniz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  // templateUrl: './app.component.html', //bu yöntem görsel çalışmaları harici app.component.html dosyasından alacaktır.
+  template: `<p>merhaba televole<p> //bu yöntem ise direkt .ts dosyasından işlemleri gerçekleştirecektir.
+  <hr>
+  <p>Lorem ipsum dolor sit amet.</p>`,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title = 'proje1';
+}
+
+---
+
+style:
+
+- Component'in css, scss vs. gibi  hangi style türü seçildiyse ilgili çalışmaların yapıldığı tasarım parçasıdır.
+- .css, .scss gibi türüne özgü uzantılı dosyalarına karşılık gelmektedir ve component ile 'styleUrls' field'ı üzerinden ilişkilendirilmektedir.
+
+- İstenildiği üzere 'styles' field'ı üzerinden de css'ler aşağıdaki gibi tanımlanabilmektedir.
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  //styleUrls: ['./app.component.scss'] //harici dosya ile,
+  styles:['h1{background-color:red;}'] //direkt .ts içerisinde.
+}) 
+export class AppComponent { 
+  title = 'proje1';
+}
+
+---
+
+Component Class:
+
+- Component'in merkezi ve esas unsudur. Uzantısı .ts olan dosyadır. 
+- app.component.ts'dir.
+- Tüm JS, TS, jQuery işlemleri bu parça üzerinde gerçekleştirilir ve component içerisinde kullanılacak değişkenlerle birlikte fonksiyonlar bu sınıf üzerinde tanımlanır.
+- Verilerin nasıl görüntüleneceği, fonksiyonların nasıl işleneceği vs. gibi işlevsellikler bu sınıf tarafından yönetilir.
+- Uygulamada iş mantığı gereği; business logic barındıran servisler 'Component Class' üzerinden çağırılırlar. Aynı şekilde API gibi dış servislere erişim sürecinin başlatılmasından da bu sınıf sorumludur.
+
+export class AppComponent { 
+  title = 'proje1';
+}
+
+---
+
+selector: 
+
+- Component'in selector özelliği, ilgili component'in uygulamanın herhangi bir noktasında nasıl çağırılacağını tanımlayan bir referans özelliğidir.
+	selector: 'app-root',
+- index.html'de <app-root></app-root> ile yapılan referans tanımı app-root değerine karşılık gelen component'in selector'ıdır.
+- Sadece HTML dosyalarında kullanılabilir.
+
+selector: 'ahmet', yazsaydı
+<ahmet></ahmet> olarak refere edilecekti.
+
+Yani bu formatı-component'i nereye gömeceksek oraya yazmamız yeterli olacaktır.
+
+- Uygulamada herhangi bir component'in HTML'inde farklı bir component'in selector'ı yukarıdaki gibi çağrılıyorsa eğer o selector'a karşılık gelen component compiler tarafından render edilecek ve üretilen çıktısı o noktaya basılmış olacaktır.
+
+A Component
+selector: 'a-com'
+html: <h1>lolo</h1>
+
+B Component
+<a-com></a-com>
+lolo çıktısı alınır.
+
+Not: Component'lerin birbirlerini selector ile referans edebilmeleri için ya aynı modülde olmaları gerekir ya da bulundukları modülden 'export' edilmiş olmaları gerekir.
+
+Terminale,
+ng generate component home yazarak manuel home adında bir component oluşturalım.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  // templateUrl: './app.component.html',
+  template: `<p>merhaba televole<p>
+  <hr>
+  <div style="background-color: aqua;">
+    <app-home></app-home>
+  </div>
+  <p>Lorem ipsum dolor sit amet.</p>`,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+  title = 'proje1';
+}
+
+İlgili div'in içerisine oluşturduğumuz home component'inin içeriğinin render edilip basıldığını görmüş oluruz.
+
+---
+
+Metadata:
+(Decorator)
+@Component({...
+
+- Component'in nasıl yapılandırılacağını ve nasıl kullanılacağını tanımlayan bir decorator'dür.
+- Bu decorator ile ilgili component'in; şu ana kadar gördüğümüz selector, template, style bilgileri eşliğinde, component'ler arası yönlendirme süreçlerindeki geçiş animasyonları(animations), component'in dışarıdan alabileceği değişken(input) yahut dışarıdan emit'lenecek event'ler(outputs) vs. tanımlanabilir.
+
+---
+
+Bir Component Nasıl Oluşturulur?
+
+ng generate component component_adi
+ya da
+ng g c component_adi
+
+ile oluşturulur.
+
+ng g c com1 yazıp entera bastığımızda;
+CREATE src/app/com1/com1.component.html (19 bytes)
+CREATE src/app/com1/com1.component.spec.ts (585 bytes)
+CREATE src/app/com1/com1.component.ts (195 bytes)
+CREATE src/app/com1/com1.component.scss (0 bytes)
+UPDATE src/app/app.module.ts (541 bytes)
+
+update ne alaka dersek ve
+app.module.ts'e gidip bakarsak;
+
+Oluşturulan Component'in Uygulamada Kullanılabilmesi için Nereye Tanımlanması Gerekir?
+
+- Ana modülün declarations kısmına tanımlanması gerekir.
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    Com1Component //component'i uygulamada kullanabilmek için ana modülde bu component'in declare edilmiş olması gerekmektedir.
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+
+
+

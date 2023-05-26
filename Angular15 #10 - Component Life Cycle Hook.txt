@@ -1,0 +1,97 @@
+Component Life Cycle Hook Nedir?
+
+- Bir Angular component'inin oluşturulduğu andan itibaren silindiği/imha edildiği ana kadar süreçteki belirli noktalarda çalıştırılması için tasarlanmış olan davranışsal metotları ifade eder.
+
+- Bu metotlar uygulamanın kullanımı sürecinde, component'in veri güncellemesi, DOM ile etkileşime girmesi veyahut takip edilen verilerdeki değişimler gibi görevleri yerine getirmenize yardımcı olabilirler. Her metot, component'in farklı aşamalarında çalışır ve dolayısıyla farklı görevleri yerine getirir.
+
+Component oluştu -> constructor -> ngOnChanges -> ngOnInit ->  ngDoCheck -> ngAfterContentInit -> ngAfterContentChecked ->
+
+-> ngAfterViewInit -> ngAfterViewChecked -> ngOnDestroy -> Yaşam döngüsü sonlandı.
+
+Component Life Cycle Hook; bir component'in yaşam sürecinde uygun noktalardaki tepkilerini/reflekslerini ifade eden bir kavramdır.
+
+İlk olarak component'in class'ından bir instance oluşturuyoruz ki uygulamada kullanılabilelim. Programatik mantık gereği constructor tetiklenecektir.
+
+- ngOnChanges: Component'in Input değişkenleri selector referansı üzerinden değiştiği durumlarda tetiklenir. OnChanges interface'i ile uygulanabilir.
+ 
+- ngOnInit: Component ilk kez oluşturulduğunda tetiklenir. OnInit interface'i ile uygulanabilir.
+ 
+- ngDoCheck: Angular, component'in güncellenmesi durumunda sık sık bu metodu tetiklemektedir. DoCheck interface'i ile uygulanabilir. Ayrıca DoCheck'in component'in changge detection döngüsünde çalıştığını genel kültür olarak bilmek işe yarar.
+ 
+- ngAfterContentInit: Component içeriği ilk kez oluşturulduğunda tetiklenir. AfterContentInit interface'i ile uygulanabilir.
+ 
+- ngAfterContentChecked: Component'in içeriği güncellendiğinde tetiklenir. AfterContentChecked interface'i ile uygulanabilir. DoCheck ile farkı DoCheck component'de olabilecek tüm değişiklikleri kapsarken AfterContentChecked sadece content-içerikle ilgili olabilecek değişiklikleri kontrol eder.
+
+- ngAfterViewInit: Component'in view'i ilk kez oluşturulduğunda tetiklenir. AfterViewInit interface'i ile uygulanabilir. Template'in artık tam olarak yayınlanmaya hazır olduğunu ngAfterViewInit ile anlarız.
+
+- ngAfterViewChecked: Component'in view'i güncellendiğinde tetiklenir. AfterViewChecked interface'i ile uygulanabilir.
+
+- ngOnDestroy: Component'in kaldırılması/silinmesi/imhası durumunda tetiklenir. OnDestroy interface'i ile uygulanabilir. Farklı bir component'e uygulamayı ne zaman yönlendiririz, o zaman bu component destroy edilecektir. Ve o zaman tetiklenecektir.
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <app-example data="merhaba">ngContent İçeriği</app-example>
+  `,
+})
+export class AppComponent {
+  title = 'component_LifeCycleHook';
+}
+
+example.component.ts;
+
+import { AfterContentChecked, AfterContentInit, AfterViewChecked, AfterViewInit, DoCheck, OnDestroy } from '@angular/core';
+import { OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+
+@Component({
+  selector: 'app-example',
+  template: `
+  Example <br>
+  <input type="text" [(ngModel)]="data"> <br>
+  <ng-content></ng-content>
+  `
+})
+export class ExampleComponent implements OnChanges, OnInit, DoCheck, AfterContentInit, AfterContentChecked, AfterViewInit, AfterViewChecked, OnDestroy {
+  
+  @Input() data: string;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log("1. ngOnChanges")
+  }
+
+  ngOnInit(): void {
+    console.log("2. ngOnInit")
+  }
+
+  ngDoCheck(): void {
+    console.log("3. DoCheck")
+  }
+
+  ngAfterContentInit(): void {
+    console.log("4. ngAfterContentInit")
+  }
+
+  ngAfterContentChecked(): void {
+    console.log("5. ngAfterContentChecked");
+  }
+
+  ngAfterViewInit(): void {
+    console.log('6. ngAfterViewInit');
+  }
+
+  ngAfterViewChecked(): void {
+    console.log('7. ngAfterViewChecked');
+  } 
+
+  ngOnDestroy(): void {
+    console.log('8. ngOnDestroy');
+  }
+  
+}
+
+ile console'da bir component'in yaşam döngüsünü gözleyebiliriz.

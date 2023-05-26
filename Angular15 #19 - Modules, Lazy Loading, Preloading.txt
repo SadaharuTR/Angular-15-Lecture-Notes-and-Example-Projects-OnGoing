@@ -1,0 +1,656 @@
+ANgular Module Nedir?
+
+- Angular mimarisi yapısal olarak component'ler, template'ler, directive'ler, pipe'lar, service'ler vs gibi temel yapıtaşlarından oluşmaktadır.
+
+- Angular ile geliştirilen uygulamaların boyutları büyüdükçe ister istemez bu yapıların koordinasyonu ve yönetimi zorlaşacak ve etkili bir şekilde yönetimsel ihtiyaç ortaya çıkacaktır.
+
+- İşte bu ihtiyaca istinaden Angular Module yapılanmasını kullanarak yapıları daha koordineli bir şekilde yönetebilir ve uygulamayı moduüler hale getirebiliriz.
+
+Not: Angular'ın 14-15-16. sürümlerinde modul yapılanmasından uzaklaşan gelişmeler söz konusudur.
+
+- Javascript ortamında bağlama bağlı olarak modül yapısı Javascript Module ve Angular Module olmak üzere farklılık arz edebilir.
+
+Angular Module: 
+
+- Uygulama parçalarını tutarlı bloklar halinde düzenlememizi, bir başka deyişle uygulamayı moduüler olarak parçalara ayırmamızı sağlayan bir yapılanmadır.
+
+- Uygulamadaki her bir parça/module belirli bir işleme odaklanmış component'ler, directive ve service'ler barındırır. Bunların moduler olarak yönetilmesini ve konfigüre edilmesini sağlar.
+
+Böylece uygulamadaki kodun bakımı ve yeniden kullanılabilirliği kolaylaşacak ve bir yandan da Seperation of Concerns ilkesi sağlanmış olacaktır.
+
+- Bir Modül içerik olarak @NgModule decorator'un, içereceği component'leri ve service'leri, bu modulde kullanılacak directive ve pipe'leri barındıran bir dizi meta veri barındırmaktadır.
+
+- Bir modül içerisinde tanımlanmış olan yapılar, uygulama sürecinde birbirlerini inject edebilmekte ve ihtiyaç doğrultusunda farklı modüller ile etkileşim kurarak, onun kapsamındaki yapılara da erişim gösterebilmektedir.
+
+- Bu da zaten moduler yapılanmanın gereği olan bir davranıştır. Uygulamayı modüler hale getirmek ve yeri geldiğinde modüller arasındaki organizasyonu sağlayarak daha yönetilebilir bir anatomi ortaya koyabilmek amaçlanmaktadır.
+
+Angular mimarisi, temelde bu modüler yapılanma üzerinde inşa edilmiştir.
+
+Other Modules <--import--> Angular Module <--import--> Other Modules 
+					
+Component/Directives/Pipes <--declares--> Angular Module
+
+Services <--providers--> Angular Module
+
+---
+
+Javascript Module & Angular Module
+
+Javascript Module:
+
+- JS dilinin bir parçasıdır. Modüler olarak dosya bazındadır. Yani her dosya modüldür.
+
+//myModule.js
+
+export function sayHello(){
+	console.log("Hello")
+}
+export const message = "Hello,world!";
+
+->
+
+import { sayHello, message } from './myModule.js;
+
+sayHello() //Hello konsola yazdırılır.
+console.log(message) //Hello,world! konsole yazdırılır.
+
+Angular Module:
+
+- Angular framework'ünün bir parçasıdır ve bir angular uygulamasındaki component'leri, service'leri, directive'leri, pipe'ları vs. yönetmek için kullanılır.
+
+- Özünde @NgModule decorator'u ile işaretlenmiş TypeScript sınıflarıdır. Yani JS Module'de olduğu gibi dosya bazlı değil, class bazlıdır.
+
+@NgModule({
+	declarations: [
+		...
+	],
+	imporrt: [
+		...
+	],
+	providers: [
+		...
+	],
+	bootstrap: [
+		...
+	]
+})
+export class AppModule { }
+
+görüldüğü üzere NgModule decorator'ı içerisinde modülle bağlantılı olacak yapıtaşlarının tanımlanabileceği alanlar mevcuttur. Bu alanların tanımı ileride...
+
+---
+
+NgModule Decorator'unun Anatomisi
+
+declarations: 
+
+- Bu alanda, modül içerisinde tanımlanacak olan component, directive ve pipe bildirimleri gerçekleştirilmektedir. Bir uygulamada birden fazla modülün içerisinde aynı component'i declare edemeyiz. Aynısı directive ve pipe'lar içinde geçerlidir.
+
+imports: 
+
+- Bu alanda, başka modullerin içe aktarımı sağlanmaktadır. Başka bir modülü içeri aktarmaki o modül içinde tanımlanan component/service/directive'lerin kullanılabilmesini sağlayacaktır.
+
+NgModel'ı kullanabilmek için FormsModule'ü import etmemiz gibi.
+
+providers: 
+
+- Modul düzerinde dependency injection  ile kullanılacak servislerin bildirimleri gerçekleştirilmektedir.
+
+exports:
+
+- Bu alanda, modül içerisindeki component/directive/pipe'ların dışarıya aktarılması gerçekleştirilmektedir. Dışarıya aktarılan yapılar, başka bir modül tarafından bu modülün import edilmesi neticesinde kullanılabilirlik kazanacaktır.
+
+- Özellikle bir component selector özelliği üzerinden kullanılacaksa export edilmesi gerekmektedir.
+
+entryComponents: 
+
+- Eskiden dinamik olarak yaratılan component'lerin kullanılması için vardı, artık yok.
+
+schemas: 
+
+- HTML şablonlarında yapısal doğrulama sağlamak için kullanılan bir özelliktir. Bu doğrulama ile HTML şablonlarında kullanılan ögelerin veya özel etiketlerin, belirli bir şablon yapısına veya standartına uygun olup olmadığı denetlenebilir. (çok kullanılmaz.)
+
+id: 
+
+- Bu alan ile modüle benzersiz bir tanımlayıcı verebilmektedir. (angular kendisi zaten vermektedir.)
+
+bootstrap:
+
+- Bu alanda uygulamanın başlangıç component'i belirtilmektedir. Uygulama başlatılıp ayağa kaldırıldığında bu component otomatik olarak trayıcıya yüklenir ve ekranda görüntülenir.
+
+Not: Eğer ki modül uygulamanın ana modülüyse bootstrap tanımlanması zorunludur.
+
+Angular uygulamasında default olarak oluşturulan,
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+ve
+
+app-routing.module.ts;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+görüldüğü üzere bu import edilmiş olan route'ları ana module transfer edebilmek için bu route'ların bulunduğu modülün de export edilmesi gerekiyor ki uygulamaya bu route'ları aktarmış olabilelim.
+
+---
+
+Angular Uygulamasında Modülün Yeri
+
+- Bir angular uygulamasında root ve routing olmak üzere iki çeşit modül gelmektedir. Bunların dışındaki modül yapılanmaları ya ya tarafımızca oluşturulmuş hususi modüllerdir ya da kullandığımız kütüphanelerin modülleridir.
+
+Root Module:
+
+- Angular CLI tarafından otomatik oluşturulan ve uygulamanın ana modülü olan modüldür. İçerisinde default olarak ana component olan AppComponent'i declare ederek gelmekte ve BrowserModule ile de AppRoutingModule'ü import etmektedir.
+
+BrowserModule, Angular uygulamasının web tarayıcısında çalışabilmesi için gerekli olan temel modüldür. Bu modüli Angular uygulamasının çalışabilmesi için gerekli olan bazı önemli service ve directive'leri sağlar.
+
+---
+
+Not: main.ts dosyasındaki bootstrapModule(AppModule) fonksiyonu hangi modülü gösteriyorsa o modül uygulamanın ana modülüdür. Yani burada default olarak app.module.ts bize ana root modüle olarak gelmektedir. main'de ana modül olarak tanımlandığı için ana modüldür. 
+
+Modül Oluşturulması
+
+- Angular'da modül oluşturabilmek için Angular CLI üzerinden aşağıdaki talimatı verebilirsiniz.
+
+ng g m modul_ismi
+ya da
+ng g module modul_ismi
+
+custom adında bir modul oluşturalım.
+
+custom.module.ts;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@NgModule({
+  declarations: [],
+  imports: [
+    CommonModule
+  ]
+})
+export class CustomModule { }
+
+---
+
+Modul Kullanımı
+
+- Angular'da oluşturulmuş bir modülün kullanılabilmesi için ya ana modüle import edilmesi ya da ana modüle import edilmiş olan bir başka modül tarafından import edilmesi gerekmektedir.
+
+app.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { CustomModule } from './custom/custom.module';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    CustomModule //ile uygulamaya ekleriz.
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+---
+
+Örnek olarak custom modülde bir component oluşturalım ve ana modüldeki declare edilmiş AppComponent tarafından kullanılmasını sağlayalım.
+
+ng g c custom ile custom isimli bir component oluşturalım.
+
+Not: Angular CLI bir directive/pipe/component oluşturma talimatı verdiğimizde ilgili yapının oluşturulacağı yapının en yakın olduğu modüle o yapıyı declare edecektir.
+
+Burada custom isimli bir component oluşturulması talimatını verdiğimizde o path'e en yakın olan custom modülünü yakayalıp o modüle ilgili component'i declare edecektir.
+
+custom.module.ts'e bakarsak;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CustomComponent } from './custom.component';
+
+@NgModule({
+  declarations: [
+    CustomComponent
+  ],
+  imports: [
+    CommonModule
+  ]
+})
+export class CustomModule { }
+
+fakat bu app.component.html içerisinde <app-custom></app-custom> kullanmamız için yeterli değildir.
+
+dışarıdaki modüller tarafından kullanılabilmesi için export işlemini de gerçekleştirmemiz lazım.
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CustomComponent } from './custom.component';
+
+@NgModule({
+  declarations: [
+    CustomComponent
+  ],
+  imports: [
+    CommonModule
+  ],
+  exports: [
+      CustomComponent
+  ]
+  
+})
+export class CustomModule { }
+
+artık app.component.html'de;
+
+<app-custom></app-custom>
+
+ng serve ile http://localhost:4200/'e gidersek ekranda
+
+custom works! yazısını görürüz.
+
+---
+
+Lazy Loading
+
+- Angular'da uygulamanın performansını güçlendirmek ve başlatma süresini iyileştirmek için modüllerde lazy loading mekanizması kullanılmaktadır.
+
+- Lazy Loading, kullanıcının ihtiyaç duyduğu component'leri veya özellikleri yalnızca gerektiği taktirde yüklemeyi sağlayan bir tekniktir. Bu teknik sayesinde, uygulamanın başlangıçta tüm modüllerinin ve bu modüllerdeki component'lerin yüklenmesi yerine yalnızca kullanıcının ihtiyaç duyduğu bölümlerin yüklemesi gerçekleştirilir.
+
+- Angular mimarisinde lazy loading kullanılmadığı taktirde tüm component'ler uygulama başlatıldığında direkt olarak tarayıcıya yüklenmeye çalışılacaktır.
+
+- Bu da istemsiz olarak performans kaybına ve uygulamanın büyüklüğü ile doğru orantılı olarak yersiz bir maliyete sebebiyet verecektir.
+
+Farkı gösterebilmek için normal modüller ile çalışılan durumu gözlemleyelim.
+
+const routes: Routes = [
+	{ path: "", component: HomeComponent },
+	{ path: "products/add", component: AddProductComponent },
+	{ path: "products/:id", component: DetailProductComponent },
+	{ path: "products", component: ListProductComponent },
+	{ path: "customer/add", component: AddCustomerComponent },
+	{ path: "customer/:id", component: DetailCustomerComponent },
+	{ path: "customer", component: ListCustomerComponent },
+]
+
+Yukarıda örnek amaçlı bazı component'ler oluşturmuş ve route'ları tanımlanmıştır.
+
+Eğer ki bizler bu şekilde bir davranışla çalışmamızı gerçekleştirirsek tüm component'ler ihtiyaç olsun olmasın uygulama ayağa kalkarken yüklenecektir.
+
+Bu durumda yapılması gereken bu component'leri farklı modüller de sisteme lazy loading mekanizması ile dahil etmektir.
+
+const routes: Routes = [
+	{ path: "", component: HomeComponent },
+	
+	//bu kısım ProductModule
+	{ path: "products/add", component: AddProductComponent },
+	{ path: "products/:id", component: DetailProductComponent },
+	{ path: "products", component: ListProductComponent },
+	
+	//bu kısım CustomerModule
+	{ path: "customer/add", component: AddCustomerComponent },
+	{ path: "customer/:id", component: DetailCustomerComponent },
+	{ path: "customer", component: ListCustomerComponent },
+]
+
+Önce lazy loading uygulanmayan yaklaşımı denemek için;
+
+yukarıdaki tüm component'leri components klasörü altında oluşturalım.
+
+app-routing.module.ts'de ilgili path'leri verelim;
+
+import { ListProductComponent } from './components/products/list-product/list-product.component';
+import { AddProductComponent } from './components/products/add-product/add-product.component';
+import { AddCustomerComponent } from './components/customers/add-customer/add-customer.component';
+import { DetailCustomerComponent } from './components/customers/detail-customer/detail-customer.component';
+import { ListCustomerComponent } from './components/customers/list-customer/list-customer.component';
+
+const routes: Routes = [
+	{ path: "", component: HomeComponent },
+	{ path: "products/add", component: AddProductComponent },
+	{ path: "products/:id", component: DetailProductComponent },
+	{ path: "products", component: ListProductComponent },
+	{ path: "customers/add", component: AddCustomerComponent },
+	{ path: "customers/:id", component: DetailCustomerComponent },
+	{ path: "customers", component: ListCustomerComponent }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+ve
+
+app.component.html'de;
+
+<a routerLink="home">Home</a> | <a routerLink="products">Products</a> | <a routerLink="customers">Customers</a> <br>
+
+<router-outlet></router-outlet>
+
+yazıp serve ettiğimizde
+
+tarayıcıda inpect -> network kısmında yaklaşık 3mb'lık data harcandığını görürüz.
+
+Burada lazy loading yaklaşımını sergileyebilmek için;
+
+ProductsModule ve CustomersModule'ü oluşturup bu component'leri alakalı oldukları modüllerin içerisinde birleştiriyoruz.
+
+ng g m components/products ile products.module.ts'i,
+
+ng g m components/customers ile customers.module.ts'i ilgili klasörde oluşturalım.
+
+customers.module.ts;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AddCustomerComponent } from './add-customer/add-customer.component';
+import { ListCustomerComponent } from './list-customer/list-customer.component';
+import { DetailCustomerComponent } from './detail-customer/detail-customer.component';
+
+@NgModule({
+  declarations: [
+    AddCustomerComponent,
+    ListCustomerComponent,
+    DetailCustomerComponent
+  ],
+  imports: [
+    CommonModule
+  ]
+})
+export class CustomersModule { }
+
+ve
+
+products.module.ts;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AddProductComponent } from './add-product/add-product.component';
+import { DetailProductComponent } from './detail-product/detail-product.component';
+import { ListProductComponent } from './list-product/list-product.component';
+
+@NgModule({
+  declarations: [
+    AddProductComponent,
+    DetailProductComponent,
+    ListProductComponent
+  ],
+  imports: [
+    CommonModule
+  ]
+})
+export class ProductsModule { }
+
+artık ilgili path'leri de bu modüllerde beilrlememiz lazım.
+
+Not: Route işlemlerinde, ana modulde forRoot(), kendi custom oluşturduğumuz modüllerde forChild() kullanırız.
+
+O yüzden app-routing.module.ts'den ilgili path'leri taşıyalım.
+
+customer.module.ts;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AddCustomerComponent } from './add-customer/add-customer.component';
+import { ListCustomerComponent } from './list-customer/list-customer.component';
+import { DetailCustomerComponent } from './detail-customer/detail-customer.component';
+import { RouterModule } from '@angular/router';
+
+@NgModule({
+  declarations: [
+    AddCustomerComponent,
+    ListCustomerComponent,
+    DetailCustomerComponent
+  ],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([
+      { path: "add", component: AddCustomerComponent },
+      { path: ":id", component: DetailCustomerComponent },
+      { path: "", component: ListCustomerComponent }
+    ])
+  ]
+})
+export class CustomersModule { }
+
+ve 
+
+product.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AddProductComponent } from './add-product/add-product.component';
+import { DetailProductComponent } from './detail-product/detail-product.component';
+import { ListProductComponent } from './list-product/list-product.component';
+import { RouterModule } from '@angular/router';
+
+@NgModule({
+  declarations: [
+    AddProductComponent,
+    DetailProductComponent,
+    ListProductComponent
+  ],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([
+      { path: "add", component: AddProductComponent },
+      { path: ":id", component: DetailProductComponent },
+      { path: "", component: ListProductComponent },
+    ])
+  ]
+})
+export class ProductsModule { }
+
+artık oluşturduğumuz modüllerin içerisindeki component'lere erişebilmek için gerekli path yani route tanımında bulunmuş olduk.
+
+Artık bu modülleri de ana routing mekanizmasına dahil etmemiz lazım. Yani bu modüllere de bir route vermemiz gerekli.
+
+app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+
+const routes: Routes = [
+  { path: "", component: HomeComponent },
+  { path: "home", component: HomeComponent },
+  //customers path'ine karşılık customers.module'ün içerisindeki CustomersModule isimli sınıfı isteğe yüklemiş olduk.
+  { path: "customers", loadChildren : () => import("../app/components/customers/customers.module").then(m => m. CustomersModule)},
+  //aynı şekilde,
+  { path: "products", loadChildren : () => import("../app/components/products/products.module").then(m => m. ProductsModule)}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+ve ng serve edip konsoldan network'e bakalım.
+
+1.9 kB transferred
+2.7 MB resources
+
+ile boyutu çok daha azalttık.
+
+burada loadChildren() fonkisyonunun lazy loading davranışı ile uygulamaya ilgili path'e karşılık gelecek component'i ve modülü yüklememizi sağlamıştır.
+
+---
+
+Lazy Loading Avantajları
+
+- İlk yükleme süresini azaltır.
+- Uygulamanın performansını arttırır.
+- Client tarafından kaynak kullanımını azaltır.
+
+----------------------------------
+
+Angular'da PreLoading Strategy nedir?
+
+- Angular uygulamalarında tarayıcıya yüklenme süresini kısaltmanın bir başka yoludur.
+
+- Yukarıda lazy loading ile bir çözüm getirmiştik. Ayrıca preloading yöntemi ile de uygulamayı daha da optimize ederek yüklenme süresini kısaltabiliriz.
+
+- Her ne kadar lazy loading modülleri ihtiyaç dahilinde yüklüyor olsa da, uygulamanın yavaş yüklenen/büyük hacimli bir modülüne ihtiyaç duyulduğu taktirde yüklenmesi zaman alacak ve ister istemez kullanıcının beklemesine sebebiyet verecektir.
+
+- Haliyle bu bekleme süresini de kısaltabilmek için lazy loading ile yüklenen modüllerin arka planda askenkron olarak ön yüklenmesini gerçekleştirebiliriz.
+
+PreLoading Stragegy'i kullanabilmek için RouterModule'da;
+
+@NgModule({
+	imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })],
+	exports: [RouterModule]
+})
+
+konfigürasyonunun yapılması yeterlidir.
+
+Tabi bunun yapılabilmesi içim modüllerin lazy loading ile yüklenmiş/tanımlanmış olması gerekir.
+
+- Angular'da ön yükleme stratejisi 'PreloadAllModules' olarak adlandırılır. Bu strateji, uygulamanın başlatılmasıyla birlikte tüm modüllerin arkaplanda ön yüklenmesini sağlar. Böylece kullanıcı bir sayfaya geçtiğinde tüm modüller hemen kullanılabilir hale gelir.
+
+- Bunun yanı sıra 'NoPreloading' i kullanarak ön yükleme stratejisi kullanmadan da çalışmalara devam edebiliriz. Bu varsayılan davranıştır.
+
+app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+
+const routes: Routes = [
+  { path: "", component: HomeComponent },
+  { path: "home", component: HomeComponent },
+  { path: "customers", loadChildren : () => import("../app/components/customers/customers.module").then(m => m. CustomersModule)},
+  { path: "products", loadChildren : () => import("../app/components/products/products.module").then(m => m. ProductsModule)}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules})],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+artık uygulamada lazy loading ile yüklenecek modüllere istek göndermeksizin tarayıcıya yüklendiklerini göreceğiz.
+
+---
+
+Custom Preloading Stragey Oluşturma
+
+- Preload Stragey ile tüm modüller ön yüklenecektir ve bu durum uygulamada yüklenmesi gereken büyük sayıda modül varsa eğer esasında bir darboğaza neden olabilir.
+
+- Bu durumda daha iyi bir strateji için şu şekilde bir davranışı sergileyebiliriz.
+
+-> Başlangıçta gerekli olabilecek ve uygulama açısından her noktada kullanılabilecek  tüm çekirdek modülleri direkt yükleyin, örnek olarak kimlik doğrulama modülü.
+
+-> Ardından sık kullanılabilecek modülleri yükleyin.
+
+-> Ve geriye kalan modülleri ile lazy loading yöntemi ile yükleyin.
+
+Burada istenilen modülleri yükleyebilmek için özel preloading strategy kullanılması gerekmektedir.
+
+Özel preloading strategy tanımlayabilmek için bir sınıf oluşturunuz ve bu sınıfa 'PreloadingStrategy'
+abstract class'ını uygulayınız.
+
+Örneğin customers'da preload olsun ama products'da olmasın isteyebiliriz.
+
+bunun için önce (ya da class'ı tanımladıktan sonra) app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+
+const routes: Routes = [
+  { path: "", component: HomeComponent },
+  { path: "home", component: HomeComponent },
+  { path: "customers", loadChildren : () => import("../app/components/customers/customers.module").then(m => m. CustomersModule), data: {preload:true}},
+  { path: "products", loadChildren : () => import("../app/components/products/products.module").then(m => m. ProductsModule), data: {preload:false}}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules})],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+yukarıdaki gibi, 
+data: {preload:false} ya da data: {preload:true} ile belirtelim. (false ile belirtmek şart değil.)
+Anlamlı isimlendirme olsun diye preload dedik. mahmutpreload da diyebilirdik.
+
+sonra app klasörünün altında strageies klasörü oluşturup custom.strategy.ts içerisinde;
+
+import { PreloadingStrategy, Route } from "@angular/router";
+import { Observable, of } from "rxjs";
+
+export class CustomStrategy implements PreloadingStrategy {
+    preload(route: Route, fn: () => Observable<any>): Observable<any>{
+        //customers - preloading: true
+        //products preloading: false
+		//burada özel ön yükleme mantığını uygulayabiliriz.
+        if(route.data["preload"] == true) {
+            return fn()
+        }
+		//ön yükleme yapmak istemediğimiz modüller için boş bir observable dönebiliriz.
+        return of()
+    }
+}
+
+buradan sonra yapılması gereken,
+
+tekrar uygulamanın app-routing.module.ts'ine gelip;
+
+...
+
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes, { preloadingStrategy: CustomStrategy})],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+şeklinde kullanıyoruz.
+
+app.module.ts'deki provider'a eklemeyi de unutmayın;
+
+providers: [CustomStrategy],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+uygulamayı serve edip tarayıcı konsolda network'e bakarsak customer'ın preload edildiğini fakat products'un edilmediğini görürüz.
+

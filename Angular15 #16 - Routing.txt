@@ -1,0 +1,1307 @@
+Angular Routing Nedir?
+
+- Angular mimarisinde bir view'den diğerine gidebilmek yahut bir component'den diğerine geçiş yapabilmek için Angular Router modülünden istifade edebiliriz.
+
+- Angular Router bir modüldür ve @angular/router dizininde built-in olarak gelmektedir. Bu modül route üzerinde gezinti component'ler üzerinde gezinti yapabilmemizi ve bunun için gerekli olan tüm service provider'larını sağlamaktadır.
+
+- Angular router modülü ile yapılabilecek işlemler aşağıdaki gibidir.
+--Adres çubuğuna yazılan URL üzerinden belirli bir componente gitme.
+--Component'e query string değerlerini gönderme.
+--Browser'ın ileri ve geri düğmelerini aktifleştirme/kullanabilme.
+--Dinamik olarak view yükleme.
+--Rotalar üzerinde yetki kontrolü gerçekleştirme.
+
+---
+
+Angular Router Bileşenleri
+
+- Router: Angular'da tarayıcı üzerinden geri/ileri düğmesini aktifleştiren ve component'ler arasında gezinilmesini sağlayan servistir.
+
+- Route: Angular'da component'lerin rotalarını belirlemizi sağlayan yapılanmadır. Her bir route, bir path ve o path ile eşleşen bir component'ten oluşur.
+
+- Routes: Tüm route'ların bulunduğu bir dizidir.
+
+- Router Outlet: Tarayıcının adres çubuğundaki URL ile uyumlu olan route'un view'in hangi alanında gösterileceğini ifade eder.
+
+- RouterLink: HTML öğesi olan a tag'ini bir route'a bağlayan direktiftir.
+
+- RouterLink Active: RouterLink ile birlikte kullanılan başka bir direktiftir. RouterLink'in kullanıldığı a tag'ine mevcut route durumuna dayalı olarak aktif bir CSS class'ı verir.
+
+- Activated Route: Component class'ı üzerinden etkin URL'i elde etmemizi sağlayan sınıftır. Bir başka deyişle o anki etkin route'u temsil eder.
+
+- RouterState: Route üzerindeki tüm bilgileri ve durumları içeren bir nesnedir. Uygulamanın hangi rotada olduğunu ve rotanın nasıl değiştiğini takip etmek için kullanılır.
+
+---
+
+Angular Router'ın Yapılandırılması
+
+1- <base href> öğesini ayarlama.
+2- Component için rotaları tanımlama.
+3- Rotaları kaydederek uygulamaya geçirme.
+4- Yönlendirici rotayı/url ayarlama ve herhangi bir HTML nesnesi ile eşleştirme.
+5- Yeni rotaya uygun component'in yükleneceği alanı belirleme.
+
+Adım 1 - <base href> 
+
+- Angular uygulamasında <base href> etiketi, rotaların belirlenmesinde kullanılacak olan temel URL'i belirtir. Bu uygulamadaki tüm rotaların kök dizininden değil belirtilen temel URL'den başlayarak bulunacağı anlamına gelmektedir.
+
+<base href> etiketi uygulamadaki 'index.html' dosyasının '<head>' bölümü içerisinde aşağıdaki gibi tanımlanır.
+
+<head>
+	...
+	<base href="/">
+	...
+</head>
+
+ya da
+
+misal olarak uygulamada rotalarımız 'example.com/my-app' şeklinde bir alt dizininde bulunacaksa ilgili etiketi aşağıdaki gibi tanımlayabiliriz.
+
+
+<head>
+	...
+	<base href="/my-app/">
+	...
+</head>
+
+---
+
+Adım 2: Component Rotaları Tanımlama
+
+Base url'i tanımladıktan sonra(ki Angular uygulamasında default olarak tanımlıdır) component'lerin rotalarının tanımlanması gerekmektedir.
+
+const routes: Routes = [
+	{ path: "a-component", component: AComponent },
+	{ path: "b-component", component: BComponent }
+];
+
+Biz de Studio Code'daki uygulamamızda terminal yardımıyla components klasörü altında ilgili component'lerimizi oluşturalım.
+
+ng g c components/home
+ng g c components/about
+ng g c components/contact
+
+home.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-home',
+  template: `Home`,
+})
+export class HomeComponent {
+
+}
+
+contact.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-contact',
+  template: `Contact`,
+})
+export class ContactComponent {
+
+}
+
+about.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-about',
+  template: `About`,
+})
+export class AboutComponent {
+
+}
+
+Şimdi oluşturduğumuz app/routes'daki routes.ts'da rotaları belirtelim.
+
+import { Routes } from "@angular/router";
+import { HomeComponent } from "../components/home/home.component";
+import { AboutComponent } from "../components/about/about.component";
+import { ContactComponent } from "../components/contact/contact.component";
+
+export const routes: Routes = [
+    { path: "home", component: HomeComponent},
+    { path: "about", component: AboutComponent},
+    { path: "contact", component: ContactComponent}
+]
+
+---
+
+Adım 3: Rotaları Kaydederek Uygulamaya Geçirme
+
+Angular'da rotaları uygulamaya kaydedebilmek için '@angular/router' dizinindeki 'RouterModule'ün aşağıdaki gibi uygulamaya import edilmesi ve bir önceki adımda tanımlanan Routes dizisinin içerisine forRoot olarak verilmesi gerekmektedir.
+
+@NgModule({
+	imports: [RouterModule.forRoot(routes)]
+	
+Uygulamaya dönersek;
+
+app.module.ts;
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { HomeComponent } from './components/home/home.component';
+import { AboutComponent } from './components/about/about.component';
+import { ContactComponent } from './components/contact/contact.component';
+import { RouterModule } from '@angular/router';
+import { routes } from './routes/routes';
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    AboutComponent,
+    ContactComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    RouterModule.forRoot(routes)
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+artık uygulamanın ana modülü bu rotaları benimseyecektir.
+
+Hangi root'un hangi component'e karşılık geleceğini bilecektir.
+
+---
+
+Adım 4: Yönlendirici rotayı/url Ayarlama
+
+Ardından istenildiği noktada routerLink direktifi eşliğinde aşağıdaki gibi rotalara bağlantılar oluşturulmalıdır.
+
+<a routerLink="a-component"> A Component </a>
+<a routerLink="b-component"> B Component </a>
+
+Uygulamada;
+
+app.component.ts'de;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="home">Home</a> | <a routerLink="about">About</a> | <a routerLink="contact">Contact</a>
+  `,
+})
+export class AppComponent {
+  title = 'router_Example';
+}
+
+---
+
+Adım 5: Yükleneceği Alanı Belirleme
+
+Son olarak rotalara uygun component'in yükleneceği alanın aşağıdaki gibi belirlenmesi gerekmektedir.
+
+<a routerLink="a-component"> A Component </a>
+<a routerLink="b-component"> B Component </a>
+<br>
+<router-outlet></router-outlet>
+
+Uygulamamızda;
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="home">Home</a> | <a routerLink="about">About</a> | <a routerLink="contact">Contact</a>
+  <br>
+  <hr>
+  <router-outlet></router-outlet>
+  `,
+})
+export class AppComponent {
+  title = 'router_Example';
+}
+
+---
+
+AppRoutingModule Dosyasında Route Yapılandırması
+
+- Angular uygulamasında Router yapılandırmasını biraz önce gördüğümüz gibi uygulamanın herhangi bir yerinde tasarlayabilir ve kullanabiliriz.
+
+- Fakat, uygulama için kritik önem arz eden bu rota yapılandırmasını ayrı bir dosyada konfigüre etmek uygulama açısından daha temiz ve geliştirici açısından da daha yönetilebilir olacaktır.
+
+Hatırlatma: Angular CLI ilk uygulamayı oluştururken bu işlem için Angular Routing Module'ünün uygulamaya yüklenio yüklenmemesini de sormaktadır.
+(Would you like to add Angular routing? (y/N) Y
+
+- Eğer ki Y ile izin verirsek uygulamaya aşağıdaki gibi 'AppRoutingModule' isminde bir sınıf eklenecek ve tüm route işlemleri bu sınıf üzerinden yürütülebilir bir vaziyette hali hazırda olacaktır.
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+const routes: Routes = [];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+routes.ts'de yaptığımız işlemi buraya taşıyalım.
+
+app-routing.module.ts;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+import { AboutComponent } from './components/about/about.component';
+import { ContactComponent } from './components/contact/contact.component';
+
+const routes: Routes = [
+    { path: "home", component: HomeComponent},
+    { path: "about", component: AboutComponent},
+    { path: "contact", component: ContactComponent}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+ve artık app.module.ts'de RouterModule.forRoot(routes)'u silebiliriz.
+
+Zamanında Y dediğimiz için app-routing.module.ts oluşturulmuş ve ana modüle import edilmiştir.
+Bu işlem yapıldığı için ekstra bir işleme gerek yoktur.
+
+---
+
+RouterLink Parameters Array
+
+- RouterLink direktifi ile HTML nesnelerinde rotalara bağlantı oluştururken ilgili path'i önceden yaptığımız gibi salt bir şekilde belirtebileceğimiz gibi dizisel olarakta ifade edebiliriz.
+
+Böyle bir path'e routerLink ile bağlantı oluşturabilmek için;
+{ path: "a-component/zart/zort", component: AComponent },
+
+RouterLink direktifini aşağıdaki gibi oluşturabiliriz;
+
+<a routerLink="a-component/zart/zort"> A Component</a>
+
+ya da RouterLink Parameters Array yaklaşımı ile;
+
+<a [routerLink] = "['a-component', 'zart', 'zort']"> A Component</a>
+
+Uygulamada app-routing.module.ts'de;
+
+    { path: "contact/a/b/c", component: ContactComponent}
+
+yazalım.
+
+app.component.ts'de;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="home">Home</a> | <a routerLink="about">About</a> | 
+  
+  <!-- <a routerLink="contact/a/b/c">Contact</a> -->
+  <a [routerLink]="['contact', 'a', 'b', 'c']">Contact</a>
+  <br>
+  <hr>
+  <router-outlet></router-outlet>
+  `,
+})
+export class AppComponent {
+  title = 'router_Example';
+}
+
+şeklinde ifade edebiliriz. İşte bu kullanım şekline parameters array denmektedir. Bu array'deki her bir tanım url'nin bir parçasını oluşturmaktadır. Ayrıca burada programatik değerlerde kullanabilmekteyiz.
+
+---
+
+RouterLinkActive
+
+- RouterLinkActive direktifi mavcut rota ile eşleşen link'e dinamik bir şekilde class uygulayabilmemizi sağlayan bir özelliğe sahiptir.
+
+template: `
+	<a routerLinkActive="active" routerLink="a-component"> A Component</a>
+	<a routerLinkActive="active" routerLink="a-component"> A Component</a>
+	<br>
+`,
+styles: [".active{ color: red; }"]
+
+Uygulamada deneyelim;
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <a routerLink="home" routerLinkActive="active">Home</a> | 
+    <a routerLink="about" routerLinkActive="active">About</a> | 
+  
+    <!-- <a routerLink="contact/a/b/c">Contact</a> -->
+    <a [routerLink]="['contact', 'a', 'b', 'c']" routerLinkActive="active">Contact</a>
+    <br>
+    <hr>
+    <router-outlet></router-outlet>
+  `,
+  styles: [".active{color: green;}"]
+})
+export class AppComponent {
+  title = 'router_Example';
+}
+
+---
+
+Varsayılan Rota Ayarlama
+
+const routes: Routes = [
+	{ path: "", redirectTo: "/home", pathMatch: "full" },
+	{ path: "home", component: HomeComponent },
+
+Default route ayarlayabilmek için yukarıdaki gibi boş bir path tanımında bulunmak ve bunu da istenilen rotaya yönlendirmek yeterli olacaktır.
+
+app-routing.module.ts'de;
+
+const routes: Routes = [
+  //default tanımlama her zaman en başa yazılır.
+    { path: "", redirectTo:"/home", pathMatch: "full"}, 
+    //herhangi bir rotaya yönlendirme yapılmamışsa /home'a redirect et. Yani HomeComponent'i default benimse.
+
+    { path: "home", component: HomeComponent},
+    { path: "about", component: AboutComponent},
+    { path: "contact/a/b/c", component: ContactComponent}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+Burada: pathMatch alanı router'ın bu url'i nasıl eşleştireceğinin kararını vermektedir.
+
+'full' ve 'prefix' olmak üzere iki değer alabilir, 'full', URL'in route tanımındaki yolun tamamıyla eşleşmesini gerektirirken, 'prefix' ise URL'in örnekle eşleşmesini yeterli görmektedir.
+
+full sadece /users ile eşleşecekken,
+prefix ise /users veya /users/1 gibi URL'ler ile eşleşebilir.
+
+---
+
+Wildcard Route
+
+- Angular uygulamasında tanımlanmış olan rotalardan herhangi biriyle eşleşmeyen bir URL olduğu taktirde Wildvard Route devreye girmektedir.
+
+- Wildcard route ** karakterleriyle temsil edilen bir yapıdır. Bu bir yandan da Joker Karakterli Yol olarakta tarif edilmektedir. Tarayıcıdaki URL, sistemde tanımlı olan diğer tüm rotalarla kontrol edildikten sonra hiçbirine eşleşmemesi durumunda Wildcard Route'a yönlendirme gerçekleştirilecektir.
+
+const routes: Routes = [
+	{ path:"", redirectTo: "/home", pathMatch: "full" },
+	{ path:"home", component: HomeComponent},
+	{ path:"a-component", component: AComponent},
+	{ path:"b-component", component: BComponent},
+	
+	{ path: "**", component: ErrorComponent },
+];
+
+Wildcard route, genellikle uygulamalardaki sayfaları yönlendirmek veya tanımlanmamış bir URL'i karşılamak için kullanılmaktadır.
+
+Burada dikkat edilmesi gereken husus; Wildvard route'u tanımlarken diğer rota tanımlarının en sonuna tanımlanmasıdır.
+
+Çünkü route yapılanması tanımlandıkları sırayla eşleştirilir ve router her zaman ilk eşleşen rotayı döndürür.
+
+Uygulamada;
+
+ng g c components/error ile component oluşturalım.
+
+error.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-error',
+  template: `
+  Yok böyle bir sayfa kardeşim.
+  `,
+})
+export class ErrorComponent {
+
+}
+
+bunu da app-routing.module.ts'de;
+
+const routes: Routes = [
+    { path: "", redirectTo:"/home", pathMatch: "full"}, 
+
+    { path: "home", component: HomeComponent},
+    { path: "about", component: AboutComponent},
+    { path: "contact/a/b/c", component: ContactComponent},
+	
+    { path: "**", component: ErrorComponent}
+];
+
+ile en altta tanımladık.
+
+artık http://localhost:4200/contact/a/b/cdd123
+
+gibi bir URL girildiğinde "Yok böyle bir sayfa kardeşim." ile karşılacağız.
+
+-----------------------------------------
+
+Angular Router'da Lovation Strategies Nedir?
+
+- Uygulamanın URL'lerinin nasıl oluşturulacağı ve yönetileceği konusunda farklı yaklaşımları elde eden bir kavramdır.
+
+- Angular Router, uygulamanın farklı sayfalarına olan istekler neticesinde gerekli yönlendirmeyi sağlarken bunu aşağıdaki konum stratejilerine göre gerçekleştirir.
+
+HashLocationStrategy : URL'leri yönetmek için  # sembolünü kullanır. URL değişikliklerinin algılanması ve yönlendirmelerinin yapılması için kullanılır.
+
+PathLocationStrategy : Normal URL'leri kullanarak yönlendirme yapar. Özellikle modern tarayıcılarda kullanılır.
+
+- Bu location strategy'lerden birini seçerek, uygulamanızın URL'lerinin nasıl görüntüleneceğini ve yönetileceğini belirleyebilirsiniz.
+
+Neden bu Stratejiler?
+
+- Angular uygulamaları özeünde single page application oldukları için kullanıcı tarafından yapılan yeni sayfa isteklerinde URL'i sunucuya göndermeksizin ve sayfayı yeniden yüklemeksizin işlev görmelidir.
+
+- Haliyle Angular uygulamalarında URL'ler local olarak kullanılmakta ve sadee tarayıcı tabanlı bir davranış sergilenmektedir.
+
+- Angular bu davranışı sergileyebilmek için location strategies'leri kullanır.
+
+Daha iyi anlayabilmek için client - side routing'i anlamamız gerekir.
+
+---
+
+Client-Side Routing
+
+- Multi Page Application olan bir uygulamada, uygulamanın bir sayfayı görüntülemesi gerektiği taktirde bu isteği sunucuya göndermesi gerekmektedir.
+
+- Ancak Angular uygulamaları biraz önce de söylendiği gibi single page application'dur ve tüm component'ler tek bir sayfada görüntülenirler.
+
+- Yani Angular uygulaması tarayıcıya yüklendiği takdirde esasında bir HTML sayfayı yüklenmiş olacaktır ve tüm component'ler vs bu HTML üzerinde çalışacaktır.
+
+- Kullanıcılar sayfa ile etkileşimde bulunduğunda yalnızca sayfanın bir kısmı dinamik olarak güncellecektir.
+
+- Angular uygulamasında index.html dosyasına göz atarsak;
+
+<body>
+	<app-root></app-root>
+</body>
+
+ifadesini görürüz. Ana component'in selector'unun ismi olan app-root burada yazar ve bu alana ilgili component'i handle edip dinamik olarak yükleme görevi görür.
+
+Bu davranış bir routing davranışıdır. Ne de olsa sayfaya farklı bir sayfanın içeriği gömülmekte ya da bir başka deyişle farklı bir sayfa tarayıcıda çağrılmaktadır. 
+
+İşte Angular bunları arka planda gerçekleştirir. Böyle bir senaryoda URL ile bir davranış söz konusu değildir.
+
+- Angular'ın doğasında bu routing yönteminin doğal olarak kendince dezavantajları mevcuttur.
+--Sayfa yenileyemezsiniz. Yani selector'un özünde olan içeriğe göre bir yenileme davranışı gerçekleştiremeyiz.
+--URL kullanarak başka biriyle ilgili sayfayı paylaşmak mümkün değildir. Yani ilgil içeriği URL tabanlı paylaşamayız. O sayfayı paylaşmamız gerekir.
+--Tarayıcıdaki geri düğmesini kullanamayız.
+--SEO mümkün değildir. Arama motoru optimizasyonu dediğimiz SEO yöntemlerini kullanmak URL olmadığından pek mümkün değildir.
+
+Client-Side Routing tam da bu noktada devreye girmektedir.
+
+Client-Side Routing yönlendirme işlemini tarayıcıda çalıştırarak sunucu tarafı yönlendirmesini taklit etmektedir.
+
+Adres çubuğundaki URL'yi değiştirmekte ve tarayıcı geçmişini güncellemektedir. Ancak tüm bu işlemleri gerçekte sunucuya bir istek göndermeksizin sağlamaktadır.
+
+Client-Side ROuting gerçekleştirmek için Hash Style Routing ya da HTML 5 ROuting yöntemlerinden birini kullanabiliriz.
+
+---
+
+Hash Style Routing
+
+- Bir web uygulamasındaki gezinti işlemlerinin URL'lerini değişirmeden tek sayfaolarak kalmasına izin veren bir yönlendirme tekniğidir.
+
+- URL'de # karakterinden sonra gelen bir dize kullanmaktadır.
+
+localhost:53142/#/a-component
+localhost:53142/#/b-component gibi.
+
+- Angular uygulamasında url yöntendirmelerinde Hash Style Routing davranışını kullanmak istiyorsanız eğer AppRoutingModule dosyasında aşağıdaki gibi konfigüre edebilirsiniz;
+
+@NgModule({
+	imports: [RouterModule.forRoot(routes, {enableTracing: true, useHash: true})],
+	exports: [RouterModule]
+})
+export class AppRoutingModule{ }
+
+Uygulamamızda app-routing.module.ts'de aynı çalışmayı yapalım.
+
+...
+@NgModule({
+  imports: [RouterModule.forRoot(routes, {useHash: true})],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+yaptıktan sonra tarayıcımıza gidersek;
+http://localhost:4200/#/home
+http://localhost:4200/#/about
+http://localhost:4200/#/contact/a/b/c
+http://localhost:4200/#/contact/lelelo (wildcard)
+
+şekline # ile gösterildiğini görürüz.
+
+---
+
+HTML 5 Routing
+
+- Tarayıcının geri özelliğini dahi kullanmamızı sağlayan Client Side Routing yöntemidir.
+- history.pushState() fonksiyonu kullanarak, programatik olarak yönetilebilir ve url konumunu değiştirebilirsiniz.
+
+var stateObj = { message: "some message" };
+history.pushState(stateObj, "title", "/a/b/");
+
+Uygulamamızda app.component.ts'de deneyelim;
+
+...
+<br>
+    <button (click)="go()">Go</button>
+  `,
+  styles: [".active{color: green;}"]
+})
+export class AppComponent{
+
+  go() {
+    history.pushState({message:"Merhaba"}, "title", "a/b")
+    }
+}
+
+Butona basıldığında http://localhost:4200/a/b gittik.
+
+Not: Tüm tarayıcılar HTML 5 routing'i desteklememektedir.
+
+---
+
+PathLocationStrategy
+
+Artıları:
+
+- http://example.com/foo gibi url'ler üretir.
+- Server-side rendering'i destekler.
+
+Eksileri
+
+- Eski tarayıcılarda desteklenmemektedir.
+- Sunucu desteği gerekir.
+
+PathLocationStrategy, normal URL'leri kullanarak yönlendirme yapar. Özellikle modern tarayıcılarda tercih edilir.
+
+Angular uygulamasının varsayılan stratejidisir.
+
+Bu stratejinin konfigürasyonu index.html'deki <base href> etiketini yapılandırarak başlar.
+
+<base href="/">
+
+Tarayıcı sayfada kullanılacak statik kaynaklar da dahil(resimler, css, javascript)bütün URL yapılanması, URL'leri oluşturmak üzere bu etikette belirtilen temel adresi kullanacaktır.
+
+İsteğe bağlı olarak <base href> etiketini aşağıdaki gibi de 'APP_BASE_HREF' injection token'ı üzerinden de konfigüre edebiliriz. app.module.ts'de..
+
+providers: [
+	{ provide: APP_BASE_HREF, useValue: "my/base" }
+	],
+	bootstrap: [AppComponent]
+}]
+export class AppModule{ }
+
+Uygulamada;
+
+app.module.ts'de;
+
+providers: [
+    { provide: APP_BASE_HREF, useValue:"ruudvannistelrooy"}
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+yaptığımız davranış bizi,
+
+http://localhost:4200/ruudvannistelrooy/home
+http://localhost:4200/ruudvannistelrooy/about
+http://localhost:4200/ruudvannistelrooy/contact
+
+url'ler oluşturacaktır.
+
+Not: Module üzerinden yapılan konfigürasyonlar daha önceliklidir. O yüzden burada yapmış olduğumuz index.html'deki default base href etiketine nazaran öncelikli kabul edilecektir.
+
+Bu konfigürasyondan sonra Angular mimarisinin temel routing yapılandırmasını gerçekleştirdiğimizde PathLocationStrategy davranışı devreye girecektir ve rotalar arasında URL tabanlı yönlendirme gerçekleştirilecektir.
+
+---
+
+HashLocationStrategy
+
+Artıları: Tüm tarayıcılar tarafından desteklenmektedir.
+
+Eksileri:
+
+- http://example.com/#foo gibi kirli URL'ler üretir.
+- Server-Side Rendering desteklemez.
+
+HashLocationStrategy, URL'leri yönetmek için # sembolünü kullanır. Özellikle eski tarayıcılarda, URL değişikliklerinin algılanması ve yönlendirilmelerin yapılması için kullanılabilir.
+
+HashLocationStrategy davranışı üzerinden rotalarda yönlendirmeyi sağlayabilmek için yandaki gibi RouterModule üzerinden forRoot fonksiyonunun ikinci parametresindeki 'useHash' field'ını kullanabilirsiniz. (yukarıdalarda bir yerde yaptığımız gibi.)
+
+ya da aşağıdaki gibi LocationStrategy'e karşılık değeri değiştirebilir ve HashLocationStrategy davranışını uygulayabilirsiniz.
+
+providers: [
+	Location, { provide: LocationStrategy, useClass: HashLocationStrategy }
+],
+bootstrap: [AppComponent]
+....
+
+-------------------------------------------
+
+Route Parameter Nedir?
+
+- Web uygulamasının URL şablonu içerisinde değişken(ler) oluşturmamızı ve bu değişkenlerde veriler  taşımamızı sağlayan yapılardır.
+
+- Yani istek yapılan URL ile eşleşen sayfaya bir yandan da ekstradan URL üzerinden veri taşıyabilmemizi sağlayan parametrelerdir.
+
+localhost:55566/products sayfasında;
+
+Products:
+ Mouse
+ Keyboard
+ Monitor
+ GPU
+ RAM
+ 
+varken,
+
+localhost:55566/products/2 sayfasında;
+
+Products:
+ Keyboard
+ 
+Görüldüğü üzere route parameter ile URL'de taşınan 2 değerine karşılık gelen product olan Keyboard'ı elde edebiliyoruz.
+
+---
+
+Route Parameter Nasıl Tanımlanır?
+
+- Bir route üzerinde route parameter ile veri taşımak istiyorsak, öncelikle verinin taşınacağı konumda bir parametre tanımlanmasında bulunmamız gerekmektedir.
+
+{ path: "products/:id", component: ProductComponent }
+
+Görüldüğü üzere route üzerinde bir parametre tanımlamak kolaydır.
+Ve bir route'da aşağıdaki gibi istediğimiz kadar parametre tanımlayabiliriz.
+
+{ path: "products/:id1/:id2/:id3", component: ProductComponent }
+
+Route'da parametre ile tanımlandığı taktirde 'products' URL'ini sade bir şekilde kullanabilmek istiyorsak onu da ayrıca tanımlamamız gerekmektedir.
+
+{ path: "products", component: ProductComponent } //http://localhost:55566/products
+{ path: "products/:id", component: ProductComponent } //http://localhost:55566/products/2
+{ path: "products/:id1/:id2/:id3", component: ProductComponent }//http://localhost:55566/products/2/3/4
+
+Tanımlanan bu  rotalara karşılık a tag'ine bir link oluşturmak istersek;
+
+<a [routerLink]="['/products', product.id]">{{product.name}}</a>
+
+Angular parametre tanımı yaptıysak parametreyi kullanmamız gerekir. Nullable operatörü kullanamamaktadır. O yüzden parametresiz kullanmak istiyorsak onun da tanımını ayrıyetten yapmamız gerekir.
+
+Uygulamamıza dönelim;
+
+app-routing.module.ts;
+
+const routes: Routes = [
+    { path: "", redirectTo:"/home", pathMatch: "full"}, 
+
+	//burada id yerine mahmut da diyebilirdik.
+    { path: "home", component: HomeComponent},
+    { path: "home/:id", component: HomeComponent},
+    { path: "about", component: AboutComponent},
+....
+
+---
+
+ActivatedRoute Nesnesi ile URL'deki Parametre Değerlerini Okuma
+
+- ActivatedRoute, o anda aktif olan rotayla ilgili işlemler yapmamızı sağlayan bir nesnedir.
+Bu nesne sayesinde url'deki route parametrelerini ve query string değerlerini elde edebilir ve amacımız doğrultusunda işleyebiliriz.
+
+- ActivatedRoute nesnesini aşağıdaki gibi @angular/router path'inden import edebilir ve kullanabiliriz.
+
+import { ActivatedRoute } from '@angular/router';
+constructor(private activatedRoute: ActivatedRoute) { }
+
+---
+
+Route Parametre Değerlerini Okuma
+
+- ActivatedRoute nesnesi, component'in etkinleştirildiği andaki yönlendirme durumunun bir görüntüsü olan ActivatedRouteSnapshot nesnesinden oluşur.
+
+constructor(private activatedRoute: ActivatedRoute) {
+	
+	activatedRoute.snapshot //o andaki URL'in görüntüsü gelecektir.
+}
+
+Haliyle bizler sayfaya yapılan yönlendirme neticesinde URL üzerinden gerekli parametre değerlerini okuyabilmek için bu nesneden istifade edeceğiz.
+
+constructor(private activatedRoute: ActivatedRoute) {
+	const id: any = activatedRoute.snapshot.paramMap.get("id") //getirme işlevi.
+	const hasId = activatedRoute.snapshot.paramMap.has("id") //var mı kontrolü.
+}
+
+Görüldüğü üzere snapshot üzerinden paramMap ile yukarıdaki gibi URL'deki parametre değerlerini okuyabilmekteyiz.
+
+Ya da isterseniz aşağıdaki gibi params ile de bu değerleri okuyabiliriz.
+
+constructor(private activatedRoute: ActivatedRoute) {
+	const id: any = activatedRoute.snapshot.params["id"]
+}
+
+Uygulamaya dönelim;
+
+app-routing.module.ts;
+
+const routes: Routes = [
+  //default tanımlama her zaman en başa yazılır.
+    { path: "", redirectTo:"/home", pathMatch: "full"}, 
+    //herhangi bir rotaya yönlendirme yapılmamışsa /home'a redirect et. Yani HomeComponent'i default benimse.
+
+    { path: "home", component: HomeComponent},
+    { path: "home/:cocojambo", component: HomeComponent},
+	
+cocojambo'daki değeri okumak için HomeComponent.ts'a gidelim.
+
+import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-home',
+  template: `Home`,
+})
+export class HomeComponent {
+  constructor(private activatedRoute: ActivatedRoute) {
+    var d = activatedRoute.snapshot.paramMap.has("id")
+    console.log("id", d);
+
+    var d2 = activatedRoute.snapshot.paramMap.has("cocojambo")
+    console.log("cocojambo", d2);
+    
+    var d3 = activatedRoute.snapshot.paramMap.get("cocojambo")
+    console.log("cocojambo", d3);
+    
+  }
+}
+
+Tarayıcıda http://localhost:4200/home/123lololo ' gidersek konsolda;
+
+
+home.component.ts:11 id false
+home.component.ts:14 cocojambo true
+home.component.ts:17 cocojambo 123lololo
+
+değerlerini görürüz.
+
+---
+
+Observable Kullanarak URL Parametrelerini Okuma
+
+- ActivatedRoute Observable bir davranışla route parametrelerini okumamızı sağlayabilmektedir.
+
+constructor(private activatedRoute: ActivatedRoute) {
+	activatedRoute.paramMap.subscribe({
+		next: param => console.log(param.get("id"))
+	})
+}
+
+paramMap üzerinden subscribe olursak yakalanan değer paramMap türünden olacaktır.
+
+fakat aşağıdaki gibi params üzerinden subscribe olursanız yakalanan değer params türünden olacaktır.
+
+constructor(private activatedRoute: ActivatedRoute) {
+	activatedRoute.params.subscribe({
+		next: param => console.log(param["id"])
+	})
+}
+
+Uygulamamıza uyarlarsak;
+
+home.component.ts;
+
+import { Component } from '@angular/core';
+import { ActivatedRoute, Params } from '@angular/router';
+
+@Component({
+  selector: 'app-home',
+  template: `Home`,
+})
+export class HomeComponent {
+  constructor(private activatedRoute: ActivatedRoute) {
+    // var d: Params = activatedRoute.snapshot.params["cocojambo"]
+    // console.log("cocojambo", d);
+
+    // var d2 = activatedRoute.snapshot.paramMap.has("cocojambo")
+    // console.log("cocojambo", d2);
+    
+    // var d3 = activatedRoute.snapshot.paramMap.get("cocojambo")
+    // console.log("cocojambo", d3);
+    
+    activatedRoute.paramMap.subscribe({
+      next: parameter => {
+        console.log(parameter.get("cocojambo"));
+      }
+    })
+
+    activatedRoute.params.subscribe({
+      next: parameter => {
+        console.log(parameter["cocojambo"]);
+      }
+    })
+  }
+}
+
+Tarayıcıda konsolda;
+
+home.component.ts:21 123lololo
+home.component.ts:27 123lololo
+
+---
+
+Hangisini Kullanmalıyız? Observable ve Snapshot...
+
+Angular'da bir component'in ngOnInıt fonksiyonu aynı rotada olunduğu sürece tek bir seferlik tetiklenecektir.
+
+Şöyle ki;
+
+localhost:55556/products/1 ->bu yandaki url için tetiklenecek olan ngOnInit fonksiyonu;
+localhost:55556/products/1 ->farklı bir parametre değerine sahip olan bu url'için tetiklenmeyecektir.
+
+Dolayısıyla bu durumda bizim snapshot ile aynı component üzerinde parametre değişimi sürecindeki yeni değeri almamız pek mümkün olmayacaktır.
+
+Haliyle observable davranış gösteren yapılanmaların kullanılması her daim daha sağlıklı çözüm sağlayacaktır. Yani paramMap veya params üzerinden subscribe olarak parametresek değerleri takip etmek, url üzerinde olabilecek değişiklikleri dinamik bir şekilde takip edebilmemizi sağlayacaktır.
+
+------------------------------------------
+
+Child Routes/Nested Routes Nedir?
+
+- Bilindiği üzere,, Angular mimarisi ile geliştirilmiş olan bir uygulama, component fikrine dayanmaktadır. Component'ler en üstte bir root component'e sahip olunan bir ağaç/hiyerarşi yapısını takip etmektedirler.
+
+AppComponent -> 
+			    ProductComponent(path:'products')
+				localhost:4200/products -> 
+											ProductDetailComponent('detail/:id') localhost:4200/products/detail/3
+
+- Bir uygulamayı yukarıdaki şemadaki gibi iç içe component'ler olacak şekilde tasarlayabiliriz.
+Ayrıca bu component'lerin her birine route vererek nested/child routes özelliği ile de tasarımda bulunabilir ve kullanabiliriz.
+________________________________________
+| 			AppComponent				|
+|_______________________________________|
+|			(ProductComponent)			|
+|			 ___________________________|
+|			| (ProductDetailComponent)	|
+|___________|___________________________|
+
+Dikkat: Alt route, üst route ile bütünsel olarak kullanılmaktadır.
+
+{
+	path: "products", component: ProductComponent,
+	children: [
+		{ path: "detail/:id, component. ProductDetailComponent }
+	]
+}
+
+Görüldüğü üzere bir child/nested route tanımlamak için ana route nesnesinin children özelliğinde child route'u tanımlamak gerekir.
+
+Misal olarak 'products/detail/3' route'una bir istek geldiğinde Angular mimarisindeki router yapısı bu route ile eşleşenleri taramaya başlayacaktır.
+
+İlk olarak birinci segment olan 'products' ile başlayacak ve path ile eşleşen 'ProductComponent'i handle edip result'ı 'AppComponent'teki <router-outlet> ile işaretlenen yere basacaktır.
+
+Daha sonra Angular router ikinci segmente geçecek ve url'nin geri kalanı olan 'detail/3' kısmını alacak ve 'products' route'u içerisindeki 'children' kısmında arayacaktır.
+
+Ardından ilgili kısımla eşleşen 'productDetailComponent'i handle edecek ve onu da 'productComponent'te bulunan <router-outlet> alanına basacaktır.
+
+Uygulamaya geçelim.
+
+Önce child_Route adlı yeni bir Angular projesi açalım.
+components klasörü altında product ve product-detail isimli iki component oluşturup,
+
+app-routing.module.ts'de;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { ProductComponent } from './components/product/product.component';
+import { ProductDetailComponent } from './components/product-detail/product-detail.component';
+
+const routes: Routes = [
+  {
+    path: "products", component: ProductComponent, children: [
+      { path: "detail/:id", component: ProductDetailComponent}
+    ]
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+ProductComponent'i AppComponent'de kullanacağız.
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="products">Products</a> <br>
+  <router-outlet></router-outlet>
+  `,
+})
+export class AppComponent {
+}
+
+product.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-product',
+  template: `
+  Product <br>
+  <a [routerLink]="['detail',2]">Product Detail</a> <br>
+  <router-outlet></router-outlet>
+  `,
+})
+export class ProductComponent {
+
+}
+
+product-detail.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-product-detail',
+  template: `Product Detail`,
+})
+export class ProductDetailComponent {
+
+}
+
+ng serve ile çalıştıralım. localhost:4200'deyiz.
+
+Tarayıcıda Products yazısına tıklarsak http://localhost:4200/products'a gideriz.
+
+Ve ekrana Products Detail a tag'i gelir. Ona da tıklarsak;
+
+http://localhost:4200/products/detail/2'e gideriz ve ilgili içerikler ekrana yüklenmiş olur.
+
+---
+
+Child Route Altına Child Route Tanımlama
+
+- Angular'da child route'un altına da child route eklenebilmektedir.
+
+AppComponent -> 
+			    ProductComponent(path:'products')
+				localhost:4200/products -> 
+											ProductDetailComponent('detail/:id') localhost:4200/products/detail/3
+											->path:'spec' ProductSpec Component
+											->path:'overview' ProductOverview Component
+										
+{
+	path: "products", component: ProductComponent,
+	children: [
+		{
+			path: "detail/:id", component: ProductDetailComponent,
+			children: [
+				{ path: "", redirectTo: "overview", pathMatch:"full" },
+				{ path: "overview", component: ProductOverviewComponent },
+				{ path: "spec", component: ProductSpecComponent },
+			]
+		}
+	]
+},
+
+Uygulamada;
+
+ovewview'in ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-product-overview',
+  template: `Ovırwiw`
+})
+export class ProductOverviewComponent {
+
+}
+
+spec'in ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-product-spec',
+  template:`Spek Ln Kaptan`
+})
+export class ProductSpecComponent {
+
+}
+				
+app-routing.module.ts;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { ProductComponent } from './components/product/product.component';
+import { ProductDetailComponent } from './components/product-detail/product-detail.component';
+import { ProductOverviewComponent } from './components/product-overview/product-overview.component';
+import { ProductSpecComponent } from './components/product-spec/product-spec.component';
+
+const routes: Routes = [
+  {
+    path: "products", component: ProductComponent, children: [
+      { path: "detail/:id", component: ProductDetailComponent, children: [
+        { path:"", redirectTo: "overview", pathMatch: "full"}, //default içinde bir yönlendirme yapılsın.
+        { path:"overview", component: ProductOverviewComponent},
+        { path:"spec", component: ProductSpecComponent}
+      ]}
+    ]
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+bu konfigürasyondan sonra product-detail.component içerisinde router-outlet tanımlamasında bulunacağız;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-product-detail',
+  template: `
+  Product Detail <br>
+  <a routerLink="spec">Spec</a> & <a routerLink="overview">Overview</a> <br>
+  <router-outlet></router-outlet>
+  `,
+})
+export class ProductDetailComponent {
+
+}
+
+Artık tarayıcıda ilgili a tag'lerine tıklandığında ilgili route işlemlerinin yapılandığını görebiliriz.
+
+------------------------------------
+
+Query String Nedir?
+
+- Route parameter'lar gibi URL üzerinde veri taşımamızı sağlayan yapılardır.
+- Route parameter'lar URL şablonu içerisinde bütünsel değişken görevi görürken, query string'ler ise URL'de şablonda bağımsız alenen okunabilir bir şekilde kullanılmaktadır.
+
+https://localhost:4200/products/2/10 -> Route Parameters
+https://localhost:4200/products?productId=2&size=10 -> Query String
+
+Haliyle route parameter'ların rotanın bir parçası oldukları için URL şablonunda önceden tanımlanmaları gerekirken, query stringler ise şablondan bağımsız oldukları için opsiyonel olarak anlık tanımlanım, kullanılabilirler.
+
+- Dolayısıyla route parameter'lar tanımlandıkları halde URL'de verilmediği taktirde şablon eksik görülecek ve ilgili rotaya yönlendirme gerçekleşmeyecektir. Ama Query String'ler de durum öyle değildir. İstenildiği zaman URL üzerinde tanımlama yapılabildiği için tanımlama yapılsın ya da yapılmasın istek yapılan URL route özüne uygun sürece yönlendirmede herhangi bir problem olmayacaktur.
+
+Peki hangisi?
+
+- İyi bir uygulama kullanıldığı değerleri gizli bir şekilde işleyen bir uygulamadır.
+
+- Misal olarak query string ile 'productId'ye karşılık alınan 2 değerinin programatik olarak hangi değişkenle temsil edildiği alenen bellidir.
+
+- Yani bu query string'i ediecek uygulama arkaplanda 'productId' ismiyle işlem yapmak mecburiyetindedir.
+
+- Lakin bu değer route parameter ile alınıyor olsaydı arkaplanda hangi değişkene karşılık geldiği bilinemezdi.
+
+- Çünkü değer URL'de gözükmeyip sadece route'da tanımlanmış olan değişkenle işlenecekti.
+
+Sonuç olarak çalışmalarda route parameter kullanılması önerilir.
+
+Not: Sıralama, filtreleme, sayfalama vs. gibi kritik bilgi arz etmeyen durumlarda query string kullanılabilir.
+
+---
+
+RouterLink Directive'inde Query String Kullanma
+
+- RouterLink direktifi ile bir bağlantıda query string değeri tanımlayabilmek için [queryParams]
+direktifini kullanabilirsiniz.
+
+<a routerLinkActive="active" routerLink="products" [queryParams]="{page: 2, size:10}">Products</a>
+
+Yeni uygulamamızda,
+
+app-module.component.ts;
+
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { AComponent } from './a/a.component';
+import { BComponent } from './b/b.component';
+
+const routes: Routes = [
+  { path:"a", component: AComponent },
+  { path:"b", component: BComponent}
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+app.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="a" [queryParams]="{x : 3}">a</a> & <a routerLink="b" [queryParams]="bQueryStrint">b</a>
+  <router-outlet></router-outlet>
+
+  `
+})
+export class AppComponent {
+  //b'ye de component class'ında tanımlayalım.
+  bQueryStrint: any = {
+    meyve: "muz",
+    sebze: "patlıcan" //birden fazla da verilebilir.
+  }
+}
+
+a.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-a',
+  template:`zart`
+})
+export class AComponent {
+
+}
+
+b.component.ts;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-b',
+  template: `zurt`
+})
+export class BComponent {
+
+}
+
+http://localhost:4200/a?x=3
+http://localhost:4200/b?meyve=muz&sebze=patl%C4%B1can //türkçe karakter olunca patladı.
+
+
+---
+
+Query String Değerlerini Okuma
+
+URL'deki query string değerlerini okumak için route parameter'lar da olduğu gibi ActivatedRoute nesnesi üzerinden observable ve snapshot olmak üzere iki yol deneyebiliriz.
+
+Observable:
+
+activatedRoute.queryParamMap.subscribe({
+	next: params => console.log(params.get("page"))
+})
+
+activatedRoute.queryParams.subscribe({
+	next: params => console.log(params.["page"])
+})
+
+Snapshot:
+
+activatedRoute.snapshot.queryParamMap.get("page")
+activatedRoute.snapshot.queryParamMap.has("page")
+activatedRoute.snapshot.queryParams["page"]
+
+Uygulamada;
+
+a.component.ts'de;
+
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-a',
+  template:`zart`
+})
+export class AComponent implements OnInit{
+  constructor(private activatedRoute:ActivatedRoute){
+
+  }
+  ngOnInit(): void {
+    this.activatedRoute.queryParamMap.subscribe({
+      next : queryStringParam => console.log(queryStringParam.get("x"))
+    })
+  }
+}
+
+Konsolda 3 yazısını görürüz.
+
+Görüldüğü üzere a URL'ine tıkladığımızda,
+http://localhost:4200/a?x=3 query string değeri mevcuttur ve biz buradaki x query string değişkenin değerini yakalayıp isteğimize göre değerlendirdik.
+
+---
+
+queryParamsHandling
+
+- Angular mimarisinde her routing işlemi neticesinde default olarak URL'deki query string'ler kaybolacaktır. Bu varsayılan davranışı değiştirebilmek için queryParamsHandling stratejisini aşağıdaki gibi kullanabiliriz.
+
+<a routerLinkActive="active" routerLink="xpage" [queryParams]="{a: 2, b:10}">X Page</a>
+<a routerLinkActive="active" routerLink="ypage" [queryParams]="{c: 2, d:10}" queryParamsHandling="preserve">Y Page</a>
+
+preserve: mevcut sayfanın query string değerlerini korur. Yönlendirme yapılacak sayfanın query string değerlerini getirmez.
+
+Ya da queryParamsHandling="merge" 'i kullanabiliriz.
+Mavcut sayfanın query string değerlerini korur ve yönlendirme yapılacak sayfanın query string değerleriyle birleştirir.
+
+Uygulamamızda;
+a'daki query string b'ye gittiğimiz zaman kaybolmasın istiyorsak;
+
+app.component.ts'de;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <a routerLink="a" [queryParams]="{x : 3}">a</a> & <a routerLink="b" [queryParams]="bQueryStrint" queryParamsHandling="preserve">b</a> <br>
+  <router-outlet></router-outlet>
+  `
+})
+export class AppComponent {
+  //b'ye de component class'ında tanımlayalım.
+  bQueryStrint: any = {
+    meyve: "muz",
+    sebze: "patlican" //birden fazla da verilebilir.
+  }
+}
+
+http://localhost:4200/a?x=3
+b'ye gidersek;
+http://localhost:4200/b?x=3
+
+korunacaktır.
+
+merge deseydik,
+http://localhost:4200/b?x=3&meyve=muz&sebze=patlican
+
+olacaktı.

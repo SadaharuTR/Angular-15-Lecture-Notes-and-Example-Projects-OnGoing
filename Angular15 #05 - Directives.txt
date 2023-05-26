@@ -1,0 +1,283 @@
+Directive Nedir?
+
+- HTML elemanlarına ekstra özellikler ve davranışlar eklemek için kullanılan özel etiketlerdir.
+- Yani bir başka deyişle DOM nesnelerini manipüle etmemizi sağlayan özel yapılanmalardır.
+- Angular'da davranışlarına göre farklı işlevsellik gösteren özek directive'ler mevcuttur. Bunların dışında kendimiz de özel directive'ler oluşturabilmekeyiz.
+
+Directive Nasıl Kullanılır?
+
+- İster hazır olsun ister custom, bir directive'in kullanımı yandaki gibidir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div directiveSelectorName>...</div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    title = 'proje1'
+}
+
+- HTML elemanına directive ile hedeflenen davranışı kazandırabilmek için directive'in selector'ının buraya bildirilmesi yeterli olacaktır.
+- Bildirilen directive'in davranışı her ne ise ilgili HTML elemanı bundan etkilenecek ve bu davranış neticesine göre şekilleniyor/manipüle ediliyor olacaktır.
+
+---
+
+Built-in/Hazır/Ön Tanımlı Directive'ler Nelerdir?
+
+- Custom directive'leri geliştirmeden önce mimari tarafından bizlere sunulan ve belirli işlemlere odaklı davranışlar sergileyen directive'leri inceleyelim.
+
+	- ngFor
+	- ngSwitch
+	- ngIf
+	- ngClass
+	- bgStyle
+	- ngModel
+	- NgNonBindable
+
+ngFor: HTML nesneleri üzerinde iterasyonel işlemler yapmak için kullanılır.
+
+- Verilen array/veri kümesi içerisindeki eleman sayısı kadar ilgili HTML nesnesini repeat edecektir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *ngFor = "let name of names">{{names}}</div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    names: string[] = ["Ali", "Fatma", "Murat", "Sertaç", "Dimitri"]
+}
+
+Ekranda,
+
+Ali
+Fatma
+Murat
+Sertaç
+Dimitri
+
+Burada *ngFor ile bir repeat işlemi yapacağımızı belirttik.
+
+ya listeli görüntü için;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <ul>
+    <li *ngFor = "let name of names">{{name}}</li>
+  </ul>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    names: string[] = ["Ali", "Fatma", "Murat", "Sertaç", "Dimitri"]
+}
+
+Ekranda,
+
++Ali
++Fatma
++Murat
++Sertaç
++Dimitri
+
+- Ayrıca istendiği taktirde aşağıdaki gibi de kullanılarak her bir elemanın index değeri de hızlıca elde edilebilir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <ul>
+    <li *ngFor = "let name of names; index as i">{{name}} - {{i}}</li>
+  </ul>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    names: string[] = ["Ali", "Fatma", "Murat", "Sertaç", "Dimitri"]
+}
+
+Ekranda,
+
++Ali - 0
++Fatma - 1
++Murat - 2
++Sertaç - 3
++Dimitri - 4
+
+Burada i değişkeni ile index değerini de elde etmiş olduk.
+
+- Veya index, first, last, even, odd keyword'leri eşliğinde ngFor ile işi şova dökebilir, birlikte kullanabiliriz.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <ul>
+    <li *ngFor = "let name of names; 
+                                    let i = index;
+                                    let isFirst = first;
+                                    let isLast = last;
+                                    let isEven = even;
+                                    let isOdd = odd
+                                    ">{{name}} - {{i}} - {{isFirst}} - {{isLast}} - {{isEven}} - {{isOdd}}</li>
+  </ul>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    names: string[] = ["Ali", "Fatma", "Murat", "Sertaç", "Dimitri"]
+}
+
+Ekranda, (+ yerine yuvarlak siyah küre olacaktır.)
+
++Ali - 0 - true - false - true - false
++Fatma - 1 - false - false - false - true
++Murat - 2 - false - false - true - false
++Sertaç - 3 - false - false - false - true
++Dimitri - 4 - false - true - true - false
+
+---
+
+ngIf: Verilen koşula göre HTML nesnelerinin görünürlüğünü kontrol etmek için kullanılan temel bir Angular directive'idir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *ngIf = "visible">Merhaba</div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    visible: boolean = true;
+}
+
+True olduğu taktirde ilgili nesne - Merhaba gösterilecektir, 
+
+<div *ngIf = "false">Merhaba</div> yazarsak ya da değişkende false olarak değiştirirsek gösterilmeyecektir.
+
+if else mantığında işlev yapabilmek için aşağıdaki gibi de kullanılabilir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *ngIf = "visible; else elseMessage">if message</div>
+  <ng-template #elseMessage>
+    else message
+  </ng-template>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    visible: boolean = false;
+}
+
+ng-template konusu ileride.
+visible true ise if message false ise else message yazar.
+
+ngIf directive'inde else if mantığında davranış doğrudan sergilenememektedir.
+Bunu yerine ilgili mantıkta;
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div *ngIf = "n == 1; else elseMessage">if Message</div>
+  <ng-template #elseMessage> 
+    <div *ngIf= "n == 2; else elseMessage2">else message</div>
+  </ng-template>
+  <ng-template #elseMessage2>
+    <div>else message 2</div>
+  </ng-template>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    n: number = 3;
+}
+
+şu pratik çözüm uygulanabilir. ngSwitch bu durumlar için daha uygundur.
+
+---
+
+ngSwitch: Verilen koşula göre HTML nesnelerinin görünürlüğünü yahut içeriğini değiştirmek için kullanılan temek bir directive'dir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <div [ngSwitch]="sayi">
+    <div *ngSwitchCase="1">sayi 1</div>
+    <div *ngSwitchCase="2">sayi 1</div>
+    <div *ngSwitchDefault>hiçbiri</div>
+  </div>
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    sayi: number = 1;
+}
+
+- ngSwitchCase ve ngSwitchDefault directive'leri ile birlikte kullanılmaktadır.
+
+---
+
+ngClass: HTML etiketlerinin class değerlerini dinamik olarak yönetebilmemizi sağlayan bir directive'dir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <input type="text" [ngClass]="cl" value="default">
+  
+  ` ,
+  styles: [".myClass{background-color: red;}"]
+})
+export class AppComponent { 
+    cl: string = "myClass";
+}
+
+---
+
+ngStyle: HTML etiketlerinin style değerlerini dinamik olarak yönetebilmemizi sağlayan bir directive'dir.
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `
+  <input type="text" [ngStyle]="style" value="default">
+  
+  ` ,
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent { 
+    style: any = {
+      'background-color': 'yellow',
+      'color':'black',
+      'font-size': '12px'
+    }
+}
+
+---
+
+ngModel ve ngNonBindable' i ise data binding konusunda görmüştük.
+
